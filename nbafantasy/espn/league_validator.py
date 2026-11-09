@@ -1,5 +1,5 @@
-from .errors import SyncError
-from .models import CATS
+from ..common.sync_error import SyncError
+from ..models.categories import Categories
 
 
 class LeagueValidator:
@@ -34,11 +34,11 @@ class LeagueValidator:
             if wk.final and len(wk.rows) != expected:
                 problems.append(f"week {wk.number} has {len(wk.rows)} rows, expected {expected} for {n} teams")
             for row in wk.rows:
-                missing = [c for c in CATS if row.stats.get(c) is None]
+                missing = [c for c in Categories.ALL if row.stats.get(c) is None]
                 if missing:
                     problems.append(f"week {wk.number} {row.team} is missing {', '.join(missing)}")
-                if wk.final and row.cat_wins + row.cat_losses + row.cat_ties != len(CATS):
-                    problems.append(f"week {wk.number} {row.team} category score doesn't add up to {len(CATS)}")
+                if wk.final and row.cat_wins + row.cat_losses + row.cat_ties != len(Categories.ALL):
+                    problems.append(f"week {wk.number} {row.team} category score doesn't add up to {len(Categories.ALL)}")
         return problems
 
     def _rosters(self, data):

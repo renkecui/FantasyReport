@@ -10,6 +10,7 @@ Create a webpage for the poject
 
 - Each table should be displayed on the webpage
 - Plan: [WEBSITE_PLAN.md](WEBSITE_PLAN.md) (static site on GitHub Pages, built by the daily run)
+- Status: done (Phases 1–4). Turn on publishing with `publish_site` in `config.json`
 
 ### Live Data and Chat Bots
 

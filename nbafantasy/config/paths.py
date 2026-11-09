@@ -1,4 +1,3 @@
-import json
 import os
 from dataclasses import dataclass
 
@@ -56,6 +55,22 @@ class Paths:
     def local_xlsx(self):
         return self._data("The_Boys_League_Stats.xlsx")
 
+    @property
+    def site(self):
+        """The built website: web/ files plus league.json. Preview with
+        python3 -m http.server -d data/site"""
+        return self._data("site")
+
+    @property
+    def site_deploy(self):
+        """git worktree of the gh-pages branch, used to publish the site."""
+        return self._data("site-deploy")
+
+    # ---- part of the project
+    @property
+    def web(self):
+        return os.path.join(self.root, "web")
+
     def prepare(self):
         """Create data/ and move files left in the project folder by older versions.
         Returns the names moved. Never overwrites a file already in data/."""
@@ -67,31 +82,3 @@ class Paths:
                 os.replace(old, new)
                 moved.append(name)
         return moved
-
-
-@dataclass(frozen=True)
-class Config:
-    """The contents of config.json."""
-    league_id: int
-    season_year: int
-    my_team_name: str = ""
-    sheet_title: str = "The Boys League Stats"
-    espn_s2: str = ""
-    swid: str = ""
-
-    @classmethod
-    def load(cls, path):
-        with open(path) as f:
-            raw = json.load(f)
-        return cls(
-            league_id=int(raw["league_id"]),
-            season_year=int(raw["season_year"]),
-            my_team_name=(raw.get("my_team_name") or "").strip(),
-            sheet_title=raw.get("sheet_title") or cls.sheet_title,
-            espn_s2=raw.get("espn_s2") or "",
-            swid=raw.get("swid") or "",
-        )
-
-    @property
-    def has_cookies(self):
-        return bool(self.espn_s2 and self.swid)

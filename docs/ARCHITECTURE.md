@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TD
-    S["launchd · 8:00 AM daily<br/>or python3 fantasy_update.py"] --> E["fantasy_update.py<br/>switch to .venv, call main()"]
+    S["launchd · 8:00 AM daily<br/>or python3 fantasy_update.py"] --> E["fantasy_update.py<br/>switch to .venv, Application().main()"]
     E --> P["Paths.prepare()<br/>create data/, move old files"]
     P --> K{"RunLock<br/>another run going?"}
     K -- yes --> X["Stop: SyncError"]
@@ -11,6 +11,12 @@ flowchart TD
     V -- no --> X
     V -- yes --> W["WorkbookBuilder<br/>styled .xlsx"]
     W --> L[("data/The_Boys_League_Stats.xlsx")]
+    V -- yes --> SE["LeagueJson + SiteBuilder<br/>web/ + league.json"]
+    SE --> SD[("data/site/")]
+    SD --> SP{"publish_site<br/>or --site-only?"}
+    SP -- yes --> GP["SitePublisher<br/>push gh-pages → GitHub Pages"]
+    SP -- no --> D
+    GP --> D
     W --> G{"--excel?"}
     G -- yes --> D["Done: log result"]
     G -- no --> CK{"GoogleSheetPublisher<br/>check live sheet"}
@@ -48,29 +54,104 @@ Back to the [README](../README.md) · See also [Setup](SETUP.md)
 
    Then it uploads the `.xlsx`, which Drive converts to the Google Sheet, adds the edit warning
    to each tab, and records the sheet's `modifiedTime` in `data/sync_state.json`.
-8. **Report.** Success or failure goes to `data/update.log`. Failures also show a Mac notification.
+8. **Build the website.** `LeagueJson` uses `LeagueStats` to compute the same ranks and totals
+   the sheet's formulas show; `SiteBuilder` copies `web/` and writes `league.json` into `data/site/`.
+9. **Publish the website** (when `publish_site` is `true` or with `--site-only`; never with
+   `--excel` or `--no-site`). `SitePublisher` keeps a git worktree of the `gh-pages` branch in
+   `data/site-deploy/`, replaces its files, amends the branch's single commit and force-pushes
+   (`--force-with-lease`). Nothing is pushed when the site didn't change. Google and the website
+   are published independently: if one fails, the other still runs, and the run reports the failure.
+10. **Report.** Success or failure goes to `data/update.log`. Failures also show a Mac notification.
 
 ## Code layout
 
+One class per file, and each file is named after its class (`LeagueStats` → `league_stats.py`,
+`SortableTable` → `sortable-table.js`).
+
 ```
-fantasy_update.py        Entry point: .venv switch, then nbafantasy.app.main()
+fantasy_update.py                 entry point: .venv switch, then Application(root).main()
 nbafantasy/
-├── app.py               SyncApp, main()          wires the steps together; CLI flags
-├── config.py            Paths, Config            file locations; config.json
-├── models.py            LeagueData, Week, MatchupRow, TeamRoster, Player
-├── espn_client.py       EspnClient               ESPN -> LeagueData
-├── validation.py        LeagueValidator          data checks before anything is replaced
-├── workbook.py          WorkbookBuilder + one SheetWriter subclass per tab
-├── google_sync.py       GoogleAuth, SyncState, GoogleSheetPublisher
-├── lock.py              RunLock
-├── util.py              RetryPolicy, MacNotifier, log, write_file
-└── errors.py            SyncError
-scripts/                 install.sh (venv + login + launchd), uninstall.sh
-.githooks/pre-commit     blocks commits of private files and secrets
+├── app/
+│   ├── application.py            Application (singleton): paths, run lock, logging, failure alerts
+│   ├── sync_pipeline.py          SyncPipeline: the steps of a run (fetch, build, publish)
+│   └── run_options.py            RunOptions: the command-line flags
+├── common/
+│   ├── singleton.py              Singleton: metaclass, one instance per process
+│   ├── sync_error.py             SyncError: a known problem that stops the run
+│   ├── logger.py                 Logger (singleton): the run's log
+│   ├── mac_notifier.py           MacNotifier (singleton): macOS notifications
+│   ├── files.py                  Files: atomic write, read
+│   ├── retry_policy.py           RetryPolicy: retries temporary errors
+│   └── run_lock.py               RunLock: stops two runs overlapping
+├── config/
+│   ├── paths.py                  Paths: where every file lives
+│   └── config.py                 Config: the contents of config.json
+├── models/
+│   ├── categories.py             Categories: the 9 scoring categories and player stats
+│   ├── league_data.py            LeagueData
+│   ├── week.py                   Week
+│   ├── matchup_row.py            MatchupRow
+│   ├── team_roster.py            TeamRoster
+│   └── player.py                 Player
+├── espn/
+│   ├── espn_client.py            EspnClient: ESPN -> LeagueData
+│   └── league_validator.py       LeagueValidator: data checks before anything is replaced
+├── stats/
+│   ├── ranking.py                Ranking: tie-aware ranks ("1, 2, 2, 4")
+│   ├── league_stats.py           LeagueStats: weekly ranks and season totals
+│   ├── weekly_row.py             WeeklyRow
+│   └── season_row.py             SeasonRow
+├── workbook/
+│   ├── workbook_builder.py       WorkbookBuilder: the whole .xlsx
+│   ├── theme.py                  Theme: fonts, colors, borders
+│   ├── sheet_writer.py           SheetWriter: base class for a tab
+│   ├── season_totals_sheet.py    SeasonTotalsSheet
+│   ├── weekly_stats_sheet.py     WeeklyStatsSheet
+│   └── team_roster_sheet.py      TeamRosterSheet
+├── google_sheets/
+│   ├── google_sheet_publisher.py GoogleSheetPublisher: .xlsx -> the shared Google Sheet
+│   ├── google_auth.py            GoogleAuth: the saved Google login
+│   ├── sync_state.py             SyncState: when the sheet was last written
+│   ├── sheet_check.py            SheetCheck: what the live sheet looks like before an update
+│   └── sheet_publish_result.py   SheetPublishResult
+└── website/
+    ├── league_json.py            LeagueJson: what goes into league.json
+    ├── site_builder.py           SiteBuilder: web/ + league.json -> data/site/
+    ├── site_publisher.py         SitePublisher: data/site/ -> gh-pages branch
+    └── site_publish_result.py    SitePublishResult
+web/
+├── index.html, style.css         the page and its styles
+└── js/                           ES modules, one class each (see "Website" below); main.js starts the app
+tests/                            one test file per class (test_league_stats.py, ...); sample_league.py
+                                  holds SampleLeague, a made-up league for tests
+scripts/                          install.sh (venv + login + launchd), uninstall.sh
+.githooks/pre-commit              blocks commits of private files and secrets
 ```
 
 Each step is a class that receives what it needs (`Config`, `Paths`, `RetryPolicy`) in its
-constructor, and steps exchange only the plain data objects in `models.py`.
+constructor, and steps exchange only the plain data objects in `models/`. There are no
+module-level functions: helpers are static methods on a class (`Files`, `Ranking`).
+
+**Singletons.** Classes that must exist once per process use the `Singleton` metaclass:
+`Logger` (the one log stream), `MacNotifier` and `Application`. Calling the class returns the same
+instance every time; `reset()` exists for tests. Data and settings (`Paths`, `Config`) are
+deliberately *not* singletons, so tests can build them with different values.
+
+**Website (`web/js/`)** follows the same layout with ES modules, one class per file:
+
+| File | Class | Role |
+|---|---|---|
+| `util/dom.js`, `util/format.js`, `util/rank-color.js` | `Dom`, `Format`, `RankColor` | Stateless helpers (static methods): building elements, number formats, rank colors |
+| `state/preferences.js` | `Preferences` (singleton) | The viewer's Stats/Ranks choice, kept in `localStorage` |
+| `state/league.js` | `League` (singleton) | Loads `league.json` and answers lookups (team colors, standings, a team's history) |
+| `components/widgets.js` | `Widgets` | Shared pieces: team name with color dot, result badges, the Stats/Ranks switch |
+| `components/sortable-table.js` | `SortableTable` | A table whose columns sort on click; remembers each table's sort |
+| `pages/page.js` → `season-page.js`, `weekly-page.js`, `team-page.js` | `Page` → `SeasonPage`, `WeeklyPage`, `TeamPage` | One class per page; the base class builds the category columns |
+| `router.js` | `Router` | Maps `#/season`, `#/weekly/<n>`, `#/team/<name>` to a page |
+| `app.js` | `App` (singleton) | Loads the data, draws the header, starts the router |
+| `main.js` | (none) | Entry point: `App.instance().start()` |
+
+The JavaScript singletons are created with `X.instance()`; calling `new X()` a second time throws.
 
 ## Data model
 
@@ -97,6 +178,23 @@ Season FG% and FT% are the average of the weekly percentages. On roster tabs, FG
 formulas (made ÷ attempted). Tab names are cleaned to meet Google's rules: no `[]:*?/\`,
 at most 31 characters, and unique.
 
+## Website
+
+`league.json` (schema version 1) holds `teams` (name, color), `season` (record, category record,
+stats, league ranks, average rank), `weeks` (each team's matchup row with stats, weekly ranks,
+average and overall rank) and `rosters` (players in lineup order with per-game averages and
+FG%/FT% as made ÷ attempted). It is built from an allow-list of fields, so nothing from
+`config.json` can reach it.
+
+`web/js/` loads it and renders three hash-routed pages: `#/season`, `#/weekly/<n>` and
+`#/team/<name>`. Every table sorts by any column; category cells are tinted by rank (green = 1st,
+red = last) and a Stats/Ranks switch shows values or ranks. The page uses no libraries or build step; the browser loads the ES modules directly.
+
+`LeagueStats` mirrors the workbook formulas: weekly rank = 1 + teams strictly better that week
+(TO: fewer is better), overall = rank of the average category rank, season W/L/T counts finished
+weeks only, category record and counting stats sum every week, FG%/FT% average the weekly
+percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
+
 ## Safety checks
 
 | Situation | What happens |
@@ -106,6 +204,8 @@ at most 31 characters, and unique.
 | Sheet deleted or trashed | A new sheet is created, `data/sheet_id.txt` is updated, and you're notified to re-share. |
 | Lost edit access | The run stops; nothing changes. |
 | Temporary errors | Up to 3 tries with growing waits for network errors, Google 429/5xx and rate-limit 403s. ESPN login errors and other 4xx errors fail immediately. |
+| Website publish fails | Logged and notified; the Google Sheet update still happens (and the other way round). The run exits with an error. |
+| Website unchanged | No commit and no push. |
 | Crash mid-write | The token, sheet ID, state and `.xlsx` are written to a temp file and then renamed, so they're never left half-written. |
 
 ## External services
@@ -115,15 +215,19 @@ at most 31 characters, and unique.
 | ESPN Fantasy API (`espn-api` package) | League, matchups, box scores, rosters | `espn_s2` + `SWID` cookies |
 | Google Drive API v3 | Upload/convert the sheet, check it, export backups | OAuth, `drive.file` scope (only files this app created) |
 | Google Sheets API v4 | Edit-warning protection on each tab (optional) | Same OAuth login |
+| GitHub (git push) + GitHub Pages | Hosts the website from the `gh-pages` branch | Your existing git login |
 | macOS launchd / osascript | Daily schedule / notifications | Local |
 
 ## Design decisions
 
 - **Replace the whole sheet each run** instead of editing cells. Every run produces a complete,
-  consistent sheet, and the formulas and styling come from one place (`workbook.py`). The cost is
+  consistent sheet, and the formulas and styling come from one place (`workbook/`). The cost is
   that manual edits are overwritten, which is why edits are backed up and tabs carry a warning.
 - **Formulas instead of computed numbers** in Season Totals and the rank columns, so the sheet
   shows how each number is derived and recalculates if a value is corrected.
+- **The website is static and built by the same run**, so it reuses the validated data, needs no
+  server, and the ESPN cookies stay on the Mac. See [WEBSITE_PLAN.md](WEBSITE_PLAN.md) for later phases.
+- **One amended commit on `gh-pages`** instead of a commit per day, so the branch stays tiny.
 - **`drive.file` scope only**: the app can't see anything else in your Drive.
 - **Files you provide vs. files the app writes**: `config.json` and `credentials.json` sit in the
   project folder; everything generated lives in `data/`. Both are git-ignored.

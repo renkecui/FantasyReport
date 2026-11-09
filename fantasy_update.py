@@ -4,9 +4,11 @@ NBAFantasy26: pull ESPN fantasy basketball league data and update a Google Sheet
 
   python3 fantasy_update.py           # normal run (what the 8am schedule does)
   python3 fantasy_update.py --login   # sign in to Google again (first time, or if the login expired)
-  python3 fantasy_update.py --excel   # only save a local .xlsx copy, skip Google
+  python3 fantasy_update.py --excel   # local files only: .xlsx + website in data/site, publish nothing
+  python3 fantasy_update.py --site-only  # build and publish only the website (GitHub Pages)
+  python3 fantasy_update.py --no-site    # don't publish the website this run
 
-The code lives in the nbafantasy/ package (see nbafantasy/__init__.py for the module map).
+The code lives in the nbafantasy/ package, one class per file (see nbafantasy/__init__.py for the map).
 See README.md for setup.
 """
 import os
@@ -23,7 +25,7 @@ if os.path.exists(_VENV_PY) and os.path.realpath(sys.prefix) != os.path.realpath
     os.execv(_VENV_PY, [_VENV_PY, os.path.abspath(__file__)] + sys.argv[1:])
 
 sys.path.insert(0, HERE)
-from nbafantasy.app import main  # noqa: E402
+from nbafantasy.app.application import Application  # noqa: E402
 
 if __name__ == "__main__":
-    main(root=HERE)
+    Application(root=HERE).main()

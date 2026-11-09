@@ -1,10 +1,11 @@
 # NBAFantasy26
 
-A daily sync from an ESPN fantasy basketball league to a shared Google Sheet.
+A daily sync from an ESPN fantasy basketball league to a shared Google Sheet and a website.
 
 Every morning at 8:00 AM, a scheduled job on a Mac pulls the league's matchups, category stats
 and rosters from ESPN, builds a styled spreadsheet, and replaces the contents of one Google Sheet.
 The sheet keeps the same link, so the whole league can bookmark it. A local Excel copy is saved too.
+The same data is published as a website on GitHub Pages, with sortable tables that work on phones.
 
 ## What's in the sheet
 
@@ -15,6 +16,14 @@ The sheet keeps the same link, so the whole league can bookmark it. A local Exce
 | **One tab per team** | Each team's current roster with season per-game averages, refreshed every run (your team first) |
 
 The league uses 9-category head-to-head scoring: FG%, FT%, 3PM, REB, AST, STL, BLK, TO, PTS.
+
+## The website
+
+The same three tables as pages: **Season** (standings, season stats and league ranks), **Weekly**
+(matchup cards and each week's category breakdown) and **Teams** (each roster, category ranks and
+matchup history). Columns sort with a click, cells are colored by rank, and a Stats/Ranks switch
+shows values or ranks. It's a static site built by the daily run (`web/` + `league.json`) and pushed
+to the `gh-pages` branch. Setup: [docs/SETUP.md](docs/SETUP.md#7-optional-publish-the-website).
 
 ## Features
 
@@ -27,13 +36,15 @@ The league uses 9-category head-to-head scoring: FG%, FT%, 3PM, REB, AST, STL, B
 
 | Area | Tools |
 |---|---|
-| Language | Python 3, object-oriented package (`nbafantasy/`), type-checked with Pyright |
+| Language | Python 3, object-oriented package (`nbafantasy/`: one class per file in subpackages, singletons for the logger, notifier and app), type-checked with Pyright |
 | ESPN data | [`espn-api`](https://pypi.org/project/espn-api/) (ESPN Fantasy API, cookie login) |
+| Website | Plain HTML, CSS and JavaScript ES modules, one class per file (no build step) in `web/`; GitHub Pages from the `gh-pages` branch |
 | Spreadsheet | [`openpyxl`](https://pypi.org/project/openpyxl/): styling, formulas, conditional formatting |
 | Google | Google Drive API v3 and Google Sheets API v4 via [`google-api-python-client`](https://pypi.org/project/google-api-python-client/); OAuth 2.0 via [`google-auth-oauthlib`](https://pypi.org/project/google-auth-oauthlib/) |
 | Scheduling | macOS launchd (LaunchAgent), set up by a Bash install script |
 | Notifications | macOS `osascript` |
 | Environment | Project-local `.venv/`; git pre-commit hook for secrets |
+| Tests | `unittest` (`python3 -m unittest discover -s tests -t .`) |
 
 ## Quick start
 
@@ -50,7 +61,10 @@ The full walkthrough, including the Google Cloud and ESPN cookie steps, is in **
 
 ```bash
 python3 fantasy_update.py            # update now (what the 8 AM job runs)
-python3 fantasy_update.py --excel    # only save the local .xlsx, skip Google
+python3 fantasy_update.py --excel    # local files only: .xlsx + website in data/site, publish nothing
+python3 fantasy_update.py --site-only  # build and publish only the website
+python3 fantasy_update.py --no-site  # skip publishing the website this run
+python3 -m http.server -d data/site # preview the website at http://localhost:8000
 python3 fantasy_update.py --login    # sign in to Google again
 scripts/uninstall.sh                 # stop the daily run
 ```
@@ -66,7 +80,9 @@ scripts/uninstall.sh                 # stop the daily run
 
 ```
 fantasy_update.py     entry point
-nbafantasy/           the code
+nbafantasy/           the code: one class per file, grouped by job (app/, espn/, stats/, workbook/, website/, ...)
+web/                  the website: index.html, style.css and js/ (one class per file)
+tests/                one unit-test file per class, and a made-up sample league
 scripts/              install.sh, uninstall.sh
 docs/                 SETUP.md, ARCHITECTURE.md, WEBSITE_PLAN.md, TODO.md
 config.example.json   template for config.json

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <title>League Stats</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%80%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🏀</span>
+        <div>
+          <h1 id="league-title">League Stats</h1>
+          <p class="updated" id="updated">Loading…</p>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="Sections">
+        <a href="#/season" data-route="season">Season</a>
+        <a href="#/weekly" data-route="weekly">Weekly</a>
+        <a href="#/team" data-route="team">Teams</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="main" tabindex="-1">
+    <p class="state">Loading league data…</p>
+  </main>
+
+  <footer class="wrap site-footer">
+    <p>Data from ESPN Fantasy, refreshed daily. Ranks: 1 = best (TO: fewest is best).
+      Green = better, red = worse.</p>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

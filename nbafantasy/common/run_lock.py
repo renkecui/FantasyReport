@@ -1,8 +1,8 @@
 import os
 import time
 
-from .errors import SyncError
-from .util import read_file
+from .files import Files
+from .sync_error import SyncError
 
 
 class RunLock:
@@ -16,7 +16,7 @@ class RunLock:
     def _holder_alive(self):
         """True if the lock file belongs to a process that is still running."""
         try:
-            pid = int(read_file(self.path).strip())
+            pid = int(Files.read(self.path).strip())
             if time.time() - os.path.getmtime(self.path) > self.MAX_AGE:
                 return False
             os.kill(pid, 0)  # signal 0 only checks that the process exists

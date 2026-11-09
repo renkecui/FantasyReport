@@ -1,0 +1,11 @@
+export class Format {
+  static PCT = new Set(["FG%", "FT%"]);
+
+  static pct(v) { return v == null ? "–" : Number(v).toFixed(3).replace(/^0(?=\.)/, ""); }
+  static int(v) { return v == null ? "–" : Math.round(v).toLocaleString(); }
+  static one(v) { return v == null ? "–" : Number(v).toFixed(1); }
+  static two(v) { return v == null ? "–" : Number(v).toFixed(2); }
+  static category(cat, v) { return Format.PCT.has(cat) ? Format.pct(v) : Format.int(v); }
+  static score(r) { return `${r.cat_wins}-${r.cat_losses}-${r.cat_ties}`; }
+  static season(year) { return `${year - 1}–${String(year).slice(-2)}`; }
+}

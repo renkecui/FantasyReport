@@ -12,7 +12,7 @@ never leave the Mac. Phase 6 later adds near-live data and chat bots using free 
 
 ```
 EspnClient → LeagueValidator → WorkbookBuilder → .xlsx → Google Sheet   (unchanged)
-                             ↘ LeagueStats → SiteExporter → league.json + web/ → SitePublisher → static host
+                             ↘ LeagueStats → LeagueJson → SiteBuilder (league.json + web/) → SitePublisher → static host
 ```
 
 Why this over a server app (Flask/FastAPI + hosting):
@@ -34,12 +34,12 @@ Why this over a server app (Flask/FastAPI + hosting):
    (Free GitHub Pages needs the repo to be public.)
 3. **Keep the Google Sheet?** Recommended: yes, keep both until the site has proven itself.
 
-## Phase 1: Compute the numbers in Python
+## Phase 1: Compute the numbers in Python ✅ Done
 
-Today Season Totals and every rank column are Excel formulas (`workbook.py`), so the values only
+Today Season Totals and every rank column are Excel formulas (`workbook/`), so the values only
 exist once Google or Excel evaluates them. The site needs them as data.
 
-- New `nbafantasy/stats.py` with `LeagueStats(data: LeagueData)` that mirrors the formulas exactly:
+- New `nbafantasy/stats/` with `LeagueStats(data: LeagueData)` (`league_stats.py`) that mirrors the formulas exactly:
   - weekly rank per category within each week (TO: lower is better), ties share the best rank
     (`COUNTIFS(...) + 1` semantics)
   - weekly average rank (col H) and overall weekly rank (col I)
@@ -49,17 +49,17 @@ exist once Google or Excel evaluates them. The site needs them as data.
 - Unit tests with a small hand-built `LeagueData` fixture (ties, a bye week, a `Live` week).
 - Optional later: have `WorkbookBuilder` cross-check its formulas against `LeagueStats`.
 
-## Phase 2: Export the data
+## Phase 2: Export the data ✅ Done
 
-- New `nbafantasy/site_export.py` with `SiteExporter` writing `data/site/league.json`:
+- New `nbafantasy/website/league_json.py` (`LeagueJson`, the JSON) and `site_builder.py` (`SiteBuilder`, writes `data/site/`):
   - `schema_version`, `generated_at`, `season_year`, `my_team`, team list with colors
   - `season_totals`, `weeks` (number, final, rows with stats + ranks), `rosters`
   - Built from an explicit allow-list of fields, so nothing from `config.json` can leak in.
 - Write via temp file + rename, like the other outputs.
 
-## Phase 3: Frontend (`web/`)
+## Phase 3: Frontend (`web/`) ✅ Done
 
-Plain HTML/CSS/JS, no build step (`index.html`, `style.css`, `app.js`) that fetches
+Plain HTML/CSS/JS, no build step (`index.html`, `style.css`, ES modules in `js/`) that fetches
 `league.json` and renders:
 
 | Page / tab | Contents | Interactions |
@@ -73,16 +73,16 @@ Plain HTML/CSS/JS, no build step (`index.html`, `style.css`, `app.js`) that fetc
 - Light/dark theme, "Last updated" stamp from `generated_at`.
 - Local preview: `python3 -m http.server -d data/site`.
 
-## Phase 4: Publish from the daily run
+## Phase 4: Publish from the daily run ✅ Built (turn on with `publish_site`, see [SETUP step 7](SETUP.md#7-optional-publish-the-website))
 
-- New `nbafantasy/site_publish.py` with `SitePublisher`: keep a `git worktree` of the `gh-pages`
+- New `nbafantasy/website/site_publisher.py` with `SitePublisher`: keep a `git worktree` of the `gh-pages`
   branch at `data/site-deploy/`, copy `web/` + `league.json` into it, commit only if something
   changed, and push. Each push uses the Mac's existing GitHub login, so no new secrets are needed.
 - One-time setup: create the orphan `gh-pages` branch and turn on Pages
   (Settings → Pages → Deploy from branch → `gh-pages` / root).
 - Keep history small: amend the single data commit (`push --force-with-lease`) instead of adding
   one commit per day.
-- Wire into `SyncApp.run()` after validation, with flags `--site-only` and `--no-site`.
+- Wire into `SyncPipeline.run()` after validation, with flags `--site-only` and `--no-site`.
   (`--site-only` is also what the Phase 6 GitHub Actions workflow runs.)
 - A failed site publish logs and notifies but doesn't block the Google Sheet update (and vice versa).
 - Update `install.sh` (deploy credentials check), the pre-commit hook (block `data/site/` on `main`),
@@ -123,7 +123,7 @@ browser ── GET league.json ────────────────�
 - New workflow `.github/workflows/update-site.yml` on a `schedule:` cron (every 15–30 minutes
   during game hours) plus `workflow_dispatch` for a manual run.
 - It runs the same Python pipeline as the Mac (`EspnClient` → `LeagueValidator` → `LeagueStats` →
-  `SiteExporter`) with `--site-only`, then pushes to `gh-pages`. It takes over Phase 4's site
+  `LeagueJson`/`SiteBuilder`) with `--site-only`, then pushes to `gh-pages`. It takes over Phase 4's site
   publishing from the Mac; the Mac job keeps updating the Google Sheet.
 - `league_id`, `season_year`, `my_team_name`, `espn_s2` and `SWID` become repository secrets.
   `Config` reads them from environment variables when `config.json` is missing.
@@ -170,11 +170,11 @@ Hosting is free, but **Claude API calls are paid per use**, so these are require
 
 ### Groundwork to do now so Phase 6 is easy
 
-- Keep `stats.py` and `site_export.py` free of Mac-only code (no `osascript`, no launchd paths), so
+- Keep `stats/` and `website/` free of Mac-only code (no `osascript`, no launchd paths), so
   they run on GitHub's Linux runners.
 - Let `Config` fall back to environment variables, and let notifications fall back to logging when
   `osascript` isn't available.
-- Load the data URL from one constant in `app.js`.
+- Load the data URL from one constant (`League.DATA_URL` in `web/js/state/league.js`).
 - Version the JSON (`schema_version`) so the frontend, the Worker and the exporter can change
   independently.
 

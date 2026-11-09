@@ -54,8 +54,9 @@ A private league needs two cookies from your ESPN login.
    | `league_id` | The number after `leagueId=` in your league's URL |
    | `season_year` | The season ESPN uses, e.g. `2027` for the 2026-27 season |
    | `my_team_name` | Your team's name exactly as ESPN shows it (its tab goes first) |
-   | `sheet_title` | Name for the Google Sheet |
+   | `sheet_title` | Name for the Google Sheet (also the website's title) |
    | `espn_s2`, `swid` | The two cookie values |
+   | `publish_site` | `true` to publish the website every run (step 7); leave `false` until then |
 
 > [!WARNING]
 > Keep `config.json` private. Anyone with these cookies can use your ESPN account.
@@ -100,6 +101,31 @@ tail -3 data/update.log | cut -c1-200
 
 The last line should end with `Updated Google Sheet: https://docs.google.com/...`.
 
+## 7. (Optional) Publish the website
+
+Every run builds the website in `data/site/`. To put it online with GitHub Pages:
+
+1. Make sure `git push` works from this folder (the run pushes with your normal GitHub login).
+2. Publish once by hand. This creates the `gh-pages` branch on GitHub:
+   ```bash
+   python3 fantasy_update.py --site-only
+   ```
+3. On GitHub, open the repository's **Settings → Pages**. Under **Build and deployment**, choose
+   **Deploy from a branch**, branch **`gh-pages`**, folder **`/ (root)`**, and **Save**.
+   Free GitHub accounts need the repository to be public for this.
+4. Add `"publish_site": true` to `config.json` so the daily run updates it too.
+
+After a minute or two the site is at `https://<your-github-name>.github.io/NBAFantasy26/`
+(the log prints the link).
+
+> [!NOTE]
+> The website is public to anyone with the link. It shows team names, stats and rosters exactly as
+> ESPN has them (check that no team name is something private, such as an email address).
+> It never includes `config.json`, cookies or IDs, and asks search engines not to list it.
+
+The `gh-pages` branch holds a single commit that each update replaces, so its history stays small.
+The working copy for it lives in `data/site-deploy/`; deleting that folder is safe.
+
 ---
 
 ## Everyday use
@@ -107,7 +133,10 @@ The last line should end with `Updated Google Sheet: https://docs.google.com/...
 | Task | Command |
 |---|---|
 | Update now | `python3 fantasy_update.py` |
-| Save only the local `.xlsx`, skip Google | `python3 fantasy_update.py --excel` |
+| Local files only (`.xlsx` and `data/site/`), publish nothing | `python3 fantasy_update.py --excel` |
+| Update only the website | `python3 fantasy_update.py --site-only` |
+| Skip the website this run | `python3 fantasy_update.py --no-site` |
+| Preview the website | `python3 -m http.server -d data/site`, then open http://localhost:8000 |
 | Sign in to Google again | `python3 fantasy_update.py --login` |
 | See what happened | `tail data/update.log` |
 | Find the sheet link | Last line of `data/update.log`, or the ID in `data/sheet_id.txt` |
@@ -133,6 +162,8 @@ Every failure shows a Mac notification and is written to `data/update.log`.
 | `Another update is already running` | Wait a few minutes. A lock left by a crash clears itself; if not, delete `data/.update.lock`. |
 | `could not add the edit warning` (HTTP 403) | Enable the Google Sheets API (step 2). The data still updated. |
 | `A NEW Google Sheet link was created` | The old sheet was deleted or trashed. Share the new link with the league. |
+| `Website publish failed at 'git push'` | Check that `git push` works from this folder. The Google Sheet still updated. |
+| `Website publish failed` (other) | Delete `data/site-deploy/` and run `python3 fantasy_update.py --site-only`. |
 
 ## Updating from an older version
 

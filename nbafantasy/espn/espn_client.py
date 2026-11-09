@@ -1,6 +1,11 @@
-from .errors import SyncError
-from .models import CATS, PLAYER_STATS, LeagueData, MatchupRow, Player, TeamRoster, Week
-from .util import RetryPolicy
+from ..common.retry_policy import RetryPolicy
+from ..common.sync_error import SyncError
+from ..models.categories import Categories
+from ..models.league_data import LeagueData
+from ..models.matchup_row import MatchupRow
+from ..models.player import Player
+from ..models.team_roster import TeamRoster
+from ..models.week import Week
 
 
 class EspnClient:
@@ -76,7 +81,7 @@ class EspnClient:
             team=team, opponent=opponent,
             cat_wins=getattr(box, f"{side}_wins"), cat_losses=getattr(box, f"{side}_losses"),
             cat_ties=getattr(box, f"{side}_ties"), result=result,
-            stats={c: (stats.get(c) or {}).get("value", 0) for c in CATS})
+            stats={c: (stats.get(c) or {}).get("value", 0) for c in Categories.ALL})
 
     def _roster(self, team_name, team):
         return TeamRoster(team=team_name, players=[self._player(p) for p in team.roster])
@@ -89,4 +94,4 @@ class EspnClient:
             slot=p.lineupSlot, name=p.name, nba_team=p.proTeam,
             positions=", ".join(s for s in p.eligibleSlots if s in self.POSITIONS),
             status=status,
-            stats={k: avg.get(k, 0) for k in PLAYER_STATS})
+            stats={k: avg.get(k, 0) for k in Categories.PLAYER_STATS})

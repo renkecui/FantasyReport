@@ -1,15 +1,16 @@
-"""NBAFantasy26: pull ESPN fantasy basketball league data and publish it to a Google Sheet.
+"""NBAFantasy26: pull ESPN fantasy basketball league data and publish it to a Google Sheet and a website.
 
-Module map (each step of a run lives in its own class):
+One class per file; each subpackage groups one part of a run:
 
-  config.py       Paths, Config            where files live (app output in data/); config.json
-  errors.py       SyncError                a known problem: stop without touching the sheet
-  models.py       LeagueData & friends     plain data passed between the steps
-  espn_client.py  EspnClient               ESPN -> LeagueData (matchups + every team's roster)
-  validation.py   LeagueValidator          refuses data that looks incomplete
-  workbook.py     WorkbookBuilder          LeagueData -> styled .xlsx (totals, weekly, a roster tab per team)
-  google_sync.py  GoogleSheetPublisher     .xlsx -> the shared Google Sheet, with backups
-  lock.py         RunLock                  stops two runs overlapping
-  util.py         log, RetryPolicy, MacNotifier, file helpers
-  app.py          SyncApp, main()          wires the steps together
+  app/            Application (the process), SyncPipeline (the steps of a run), RunOptions (CLI flags)
+  common/         Singleton, SyncError, Logger, Files, RetryPolicy, MacNotifier, RunLock
+  config/         Paths (where files live), Config (config.json)
+  models/         Categories and the plain data passed between steps (LeagueData, Week, ...)
+  espn/           EspnClient (ESPN -> LeagueData), LeagueValidator (refuses incomplete data)
+  stats/          Ranking, LeagueStats, WeeklyRow, SeasonRow: ranks and totals in Python
+  workbook/       WorkbookBuilder and one SheetWriter subclass per tab -> styled .xlsx
+  google_sheets/  GoogleSheetPublisher, GoogleAuth, SyncState, ... -> the shared Google Sheet
+  website/        LeagueJson, SiteBuilder, SitePublisher -> league.json, data/site/, GitHub Pages
+
+Each file is named after the class it holds, e.g. stats/league_stats.py -> LeagueStats.
 """
