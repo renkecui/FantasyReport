@@ -1,0 +1,20 @@
+# ---- Private: never commit these ----
+# ESPN cookies (espn_s2, SWID) and league ID
+config.json
+# Google OAuth client secret and login token
+credentials.json
+token.json
+# Your Google Sheet ID and sync info
+sheet_id.txt
+sync_state.json
+# League data and logs
+backups/
+*.xlsx
+update.log
+.update.lock
+
+# ---- Python / macOS clutter ----
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
