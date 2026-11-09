@@ -14,7 +14,7 @@ flowchart TD
     V -- yes --> SE["LeagueJson + SiteBuilder<br/>web/ + league.json"]
     SE --> SD[("data/site/")]
     SD --> SP{"publish_site<br/>or --site-only?"}
-    SP -- yes --> GP["SitePublisher<br/>push gh-pages → GitHub Pages"]
+    SP -- yes --> GP["SitePublisher<br/>commit web/league.json to main → Actions deploys Pages"]
     SP -- no --> D
     GP --> D
     W --> G{"--excel?"}
@@ -57,9 +57,11 @@ Back to the [README](../README.md) · See also [Setup](SETUP.md)
 8. **Build the website.** `LeagueJson` uses `LeagueStats` to compute the same ranks and totals
    the sheet's formulas show; `SiteBuilder` copies `web/` and writes `league.json` into `data/site/`.
 9. **Publish the website** (when `publish_site` is `true` or with `--site-only`; never with
-   `--excel` or `--no-site`). `SitePublisher` keeps a git worktree of the `gh-pages` branch in
-   `data/site-deploy/`, replaces its files, amends the branch's single commit and force-pushes
-   (`--force-with-lease`). Nothing is pushed when the site didn't change. Google and the website
+   `--excel` or `--no-site`). `SitePublisher` keeps a detached checkout of `main` in
+   `data/site-deploy/` (so it never touches your working branch), copies the new `league.json` to
+   `web/league.json`, commits only that file and pushes to `main`. Nothing is committed when only the
+   timestamp changed; if someone else pushed meanwhile, it rebuilds on top and tries once more. The
+   **Deploy website** workflow (`.github/workflows/pages.yml`) then deploys `web/` to GitHub Pages. Google and the website
    are published independently: if one fails, the other still runs, and the run reports the failure.
 10. **Report.** Success or failure goes to `data/update.log`. Failures also show a Mac notification.
 
@@ -117,7 +119,7 @@ nbafantasy/
 └── website/
     ├── league_json.py            LeagueJson: what goes into league.json
     ├── site_builder.py           SiteBuilder: web/ + league.json -> data/site/
-    ├── site_publisher.py         SitePublisher: data/site/ -> gh-pages branch
+    ├── site_publisher.py         SitePublisher: league.json -> web/league.json on main
     └── site_publish_result.py    SitePublishResult
 web/
 ├── index.html, style.css         the page and its styles
@@ -125,6 +127,7 @@ web/
 tests/                            one test file per class (test_league_stats.py, ...); sample_league.py
                                   holds SampleLeague, a made-up league for tests
 scripts/                          install.sh (venv + login + launchd), uninstall.sh
+.github/workflows/pages.yml       deploys web/ to GitHub Pages when it changes on main
 .githooks/pre-commit              blocks commits of private files and secrets
 ```
 
@@ -220,7 +223,7 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
 | ESPN Fantasy API (`espn-api` package) | League, matchups, box scores, rosters | `espn_s2` + `SWID` cookies |
 | Google Drive API v3 | Upload/convert the sheet, check it, export backups | OAuth, `drive.file` scope (only files this app created) |
 | Google Sheets API v4 | Edit-warning protection on each tab (optional) | Same OAuth login |
-| GitHub (git push) + GitHub Pages | Hosts the website from the `gh-pages` branch | Your existing git login |
+| GitHub (git push) + GitHub Actions + Pages | The run pushes `web/league.json` to `main`; the **Deploy website** workflow publishes `web/` | Your existing git login; the workflow uses GitHub's built-in Pages token |
 | macOS launchd / osascript | Daily schedule / notifications | Local |
 
 ## Design decisions
@@ -232,7 +235,9 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
   shows how each number is derived and recalculates if a value is corrected.
 - **The website is static and built by the same run**, so it reuses the validated data, needs no
   server, and the ESPN cookies stay on the Mac. See [WEBSITE_PLAN.md](WEBSITE_PLAN.md) for later phases.
-- **One amended commit on `gh-pages`** instead of a commit per day, so the branch stays tiny.
+- **Everything on `main`.** The site's code and its data (`web/league.json`) live on one branch;
+  a data commit is added only when the numbers change. New work happens on working branches merged
+  into `main`. GitHub Actions deploys `web/`, so no separate site branch is needed.
 - **`drive.file` scope only**: the app can't see anything else in your Drive.
 - **Files you provide vs. files the app writes**: `config.json` and `credentials.json` sit in the
   project folder; everything generated lives in `data/`. Both are git-ignored.

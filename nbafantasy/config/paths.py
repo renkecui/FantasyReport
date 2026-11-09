@@ -63,7 +63,7 @@ class Paths:
 
     @property
     def site_deploy(self):
-        """git worktree of the gh-pages branch, used to publish the site."""
+        """A separate, detached checkout of main, used to commit and push web/league.json."""
         return self._data("site-deploy")
 
     # ---- part of the project

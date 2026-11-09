@@ -1,7 +1,9 @@
+import json
 import os
 import re
 import shutil
 import subprocess
+from datetime import datetime
 from typing import List, Optional
 
 from .site_publish_result import SitePublishResult
@@ -9,16 +11,20 @@ from ..common.sync_error import SyncError
 
 
 class SitePublisher:
-    """The built site folder -> the gh-pages branch on GitHub, served by GitHub Pages.
+    """The day's league.json -> web/league.json on main, pushed to GitHub. A GitHub Actions
+    workflow (.github/workflows/pages.yml) then deploys web/ to GitHub Pages.
 
-    Keeps a git worktree of the gh-pages branch in data/site-deploy/, replaces its files with the
-    new site, and pushes. The branch holds a single commit that is amended each run, so daily
-    updates don't pile up history. Pushing uses the Mac's existing GitHub login.
+    The commit is made in a separate checkout of main in data/site-deploy/ (detached, so it never
+    clashes with the main checkout), so it never touches the branch or files you are working on.
+    Nothing is committed when only the timestamp changed. Pushing uses the Mac's GitHub login.
     """
 
-    BRANCH = "gh-pages"
+    BRANCH = "main"
     REMOTE = "origin"
+    DATA_FILE = "league.json"
+    TARGET = "web/league.json"  # where the data lives in the repository
     TIMEOUT = 120
+    VOLATILE_KEYS = ("generated_at",)  # a change in only these isn't worth a commit
 
     def __init__(self, repo_dir, deploy_dir, runner=subprocess.run):
         self.repo_dir = repo_dir
@@ -26,17 +32,22 @@ class SitePublisher:
         self._run = runner
 
     # ---------------------------------------------------------------- public
-    def publish(self, site_dir, message="Update site data") -> SitePublishResult:
-        self._prepare_worktree()
-        self._replace_files(site_dir)
-        self._git(self.deploy_dir, "add", "-A")
-        if self._ok(self.deploy_dir, "diff", "--cached", "--quiet"):
-            return SitePublishResult(changed=False, url=self.pages_url())
-        if self._ok(self.deploy_dir, "rev-parse", "--verify", "--quiet", "HEAD"):
-            self._git(self.deploy_dir, "commit", "--quiet", "--amend", "-m", message)
-        else:
-            self._git(self.deploy_dir, "commit", "--quiet", "-m", message)
-        self._git(self.deploy_dir, "push", "--quiet", "--force-with-lease", self.REMOTE, self.BRANCH)
+    def publish(self, site_dir, message=None) -> SitePublishResult:
+        """Commit and push site_dir/league.json if the league data changed."""
+        message = message or f"Update league data ({datetime.now():%Y-%m-%d %H:%M})"
+        source = os.path.join(site_dir, self.DATA_FILE)
+        push = ["push", "--quiet", self.REMOTE, f"HEAD:refs/heads/{self.BRANCH}"]
+        for last_try in (False, True):  # try again if someone else pushed to main in between
+            self._prepare_checkout()
+            if not self._copy_if_changed(source):
+                return SitePublishResult(changed=False, url=self.pages_url())
+            self._git(self.deploy_dir, "add", self.TARGET)
+            self._git(self.deploy_dir, "commit", "--quiet", "-m", message, "--", self.TARGET)
+            if last_try:
+                self._git(self.deploy_dir, *push)  # raises with git's message if it fails again
+            elif not self._ok(self.deploy_dir, *push):
+                continue
+            break
         return SitePublishResult(changed=True, url=self.pages_url())
 
     def pages_url(self) -> Optional[str]:
@@ -52,48 +63,47 @@ class SitePublisher:
     def _remote_ref(self):
         return f"refs/remotes/{self.REMOTE}/{self.BRANCH}"
 
-    def _prepare_worktree(self):
-        """Make data/site-deploy a checkout of gh-pages that matches GitHub's copy, creating
-        the branch (with no history) the first time."""
-        # Fetch failing just means the branch isn't on GitHub yet.
-        self._ok(self.repo_dir, "fetch", "--quiet", self.REMOTE,
-                 f"+refs/heads/{self.BRANCH}:{self._remote_ref()}")
-        on_remote = self._ok(self.repo_dir, "rev-parse", "--verify", "--quiet", self._remote_ref())
-
-        if not os.path.exists(os.path.join(self.deploy_dir, ".git")):
+    def _prepare_checkout(self):
+        """Make data/site-deploy a detached checkout of GitHub's main, creating it the first time
+        (and replacing an old checkout of another branch, e.g. the former gh-pages)."""
+        self._git(self.repo_dir, "fetch", "--quiet", self.REMOTE,
+                  f"+refs/heads/{self.BRANCH}:{self._remote_ref()}")
+        has_checkout = os.path.exists(os.path.join(self.deploy_dir, ".git"))
+        if has_checkout and not self._is_detached():
+            self._ok(self.repo_dir, "worktree", "remove", "--force", self.deploy_dir)
+            has_checkout = False
+        if not has_checkout:
             if os.path.exists(self.deploy_dir):
                 shutil.rmtree(self.deploy_dir)
             self._git(self.repo_dir, "worktree", "prune")
-            if on_remote:
-                self._git(self.repo_dir, "worktree", "add", "--quiet", "-B", self.BRANCH,
-                          self.deploy_dir, self._remote_ref())
-            elif self._ok(self.repo_dir, "rev-parse", "--verify", "--quiet", f"refs/heads/{self.BRANCH}"):
-                self._git(self.repo_dir, "worktree", "add", "--quiet", self.deploy_dir, self.BRANCH)
-            else:
-                self._git(self.repo_dir, "worktree", "add", "--quiet", "--orphan", "-b", self.BRANCH,
-                          self.deploy_dir)
-        elif on_remote:
+            self._git(self.repo_dir, "worktree", "add", "--quiet", "--detach", self.deploy_dir, self._remote_ref())
+        else:
             self._git(self.deploy_dir, "reset", "--quiet", "--hard", self._remote_ref())
 
-    def _replace_files(self, site_dir):
-        for name in os.listdir(self.deploy_dir):
-            if name == ".git":
-                continue
-            path = os.path.join(self.deploy_dir, name)
-            if os.path.isdir(path) and not os.path.islink(path):
-                shutil.rmtree(path)
-            else:
-                os.remove(path)
-        for name in os.listdir(site_dir):
-            src = os.path.join(site_dir, name)
-            dst = os.path.join(self.deploy_dir, name)
-            if os.path.isdir(src):
-                shutil.copytree(src, dst)
-            else:
-                shutil.copy2(src, dst)
-        # Serve files as they are (no Jekyll processing).
-        with open(os.path.join(self.deploy_dir, ".nojekyll"), "w"):
-            pass
+    def _is_detached(self):
+        res = self._call(self.deploy_dir, ["symbolic-ref", "--quiet", "HEAD"])
+        return res.returncode != 0
+
+    def _copy_if_changed(self, source) -> bool:
+        """Copy the new league.json over the committed one. False if only the timestamp differs."""
+        target = os.path.join(self.deploy_dir, self.TARGET)
+        if os.path.exists(target) and self._content(target) == self._content(source):
+            return False
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        shutil.copy2(source, target)
+        return True
+
+    @classmethod
+    def _content(cls, path):
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            return None
+        if isinstance(data, dict):
+            for key in cls.VOLATILE_KEYS:
+                data.pop(key, None)
+        return data
 
     def _call(self, cwd, args: List[str]):
         try:

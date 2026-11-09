@@ -23,8 +23,8 @@ The same three tables as pages: **Season** (standings, season stats and league r
 totals or per-week averages and to include or leave out the week in progress), **Weekly**
 (matchup cards and each week's category breakdown) and **Teams** (each roster, category ranks and
 matchup history). Columns sort with a click, cells are colored by rank, and a Stats/Ranks switch
-shows values or ranks. It's a static site built by the daily run (`web/` + `league.json`) and pushed
-to the `gh-pages` branch. Setup: [docs/SETUP.md](docs/SETUP.md#7-optional-publish-the-website).
+shows values or ranks. It's a static site in `web/` on `main`: the daily run commits fresh data to
+`web/league.json` and a GitHub Actions workflow deploys `web/` to GitHub Pages. Setup: [docs/SETUP.md](docs/SETUP.md#7-optional-publish-the-website).
 
 ## Features
 
@@ -39,7 +39,7 @@ to the `gh-pages` branch. Setup: [docs/SETUP.md](docs/SETUP.md#7-optional-publis
 |---|---|
 | Language | Python 3, object-oriented package (`nbafantasy/`: one class per file in subpackages, singletons for the logger, notifier and app), type-checked with Pyright |
 | ESPN data | [`espn-api`](https://pypi.org/project/espn-api/) (ESPN Fantasy API, cookie login) |
-| Website | Plain HTML, CSS and JavaScript ES modules, one class per file (no build step) in `web/`; GitHub Pages from the `gh-pages` branch |
+| Website | Plain HTML, CSS and JavaScript ES modules, one class per file (no build step) in `web/`; deployed from `main` to GitHub Pages by GitHub Actions |
 | Spreadsheet | [`openpyxl`](https://pypi.org/project/openpyxl/): styling, formulas, conditional formatting |
 | Google | Google Drive API v3 and Google Sheets API v4 via [`google-api-python-client`](https://pypi.org/project/google-api-python-client/); OAuth 2.0 via [`google-auth-oauthlib`](https://pypi.org/project/google-auth-oauthlib/) |
 | Scheduling | macOS launchd (LaunchAgent), set up by a Bash install script |

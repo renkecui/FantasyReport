@@ -106,13 +106,13 @@ The last line should end with `Updated Google Sheet: https://docs.google.com/...
 Every run builds the website in `data/site/`. To put it online with GitHub Pages:
 
 1. Make sure `git push` works from this folder (the run pushes with your normal GitHub login).
-2. Publish once by hand. This creates the `gh-pages` branch on GitHub:
+2. On GitHub, open the repository's **Settings → Pages**. Under **Build and deployment → Source**,
+   choose **GitHub Actions**. Free GitHub accounts need the repository to be public for this.
+3. Publish once by hand. This commits today's `web/league.json` to `main` and pushes it, and the
+   **Deploy website** workflow (`.github/workflows/pages.yml`) puts `web/` online:
    ```bash
    python3 fantasy_update.py --site-only
    ```
-3. On GitHub, open the repository's **Settings → Pages**. Under **Build and deployment**, choose
-   **Deploy from a branch**, branch **`gh-pages`**, folder **`/ (root)`**, and **Save**.
-   Free GitHub accounts need the repository to be public for this.
 4. Add `"publish_site": true` to `config.json` so the daily run updates it too.
 
 After a minute or two the site is at `https://<your-github-name>.github.io/NBAFantasy26/`
@@ -123,8 +123,12 @@ After a minute or two the site is at `https://<your-github-name>.github.io/NBAFa
 > ESPN has them (check that no team name is something private, such as an email address).
 > It never includes `config.json`, cookies or IDs, and asks search engines not to list it.
 
-The `gh-pages` branch holds a single commit that each update replaces, so its history stays small.
-The working copy for it lives in `data/site-deploy/`; deleting that folder is safe.
+Everything lives on `main`: the site's code in `web/`, and the data in `web/league.json`, which the
+run commits as "Update league data (date)" whenever the numbers change (a new timestamp alone isn't
+committed). The run makes that commit in its own checkout of `main` in `data/site-deploy/`, so it never
+touches the branch or files you're working on; deleting that folder is safe. Run `git pull` on `main`
+before starting new work to pick up the data commits. Any push that changes `web/` (including merging
+a working branch into `main`) redeploys the site.
 
 ---
 
@@ -164,6 +168,7 @@ Every failure shows a Mac notification and is written to `data/update.log`.
 | `A NEW Google Sheet link was created` | The old sheet was deleted or trashed. Share the new link with the league. |
 | `Website publish failed at 'git push'` | Check that `git push` works from this folder. The Google Sheet still updated. |
 | `Website publish failed` (other) | Delete `data/site-deploy/` and run `python3 fantasy_update.py --site-only`. |
+| Site shows the README or an old version | Settings → Pages → Source must be **GitHub Actions**; check the **Deploy website** run in the Actions tab. |
 
 ## Updating from an older version
 

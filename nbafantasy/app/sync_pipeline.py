@@ -80,7 +80,7 @@ class SyncPipeline:
 
     def publish_site(self, site_dir):
         res = SitePublisher(self.paths.root, self.paths.site_deploy).publish(site_dir)
-        return f"Website {'updated' if res.changed else 'unchanged'}: {res.url or 'gh-pages'}"
+        return f"Website {'updated' if res.changed else 'unchanged'}: {res.url or 'pushed to main'}"
 
     @staticmethod
     def _attempt(failures: List[str], report: List[str], step):

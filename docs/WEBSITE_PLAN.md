@@ -29,7 +29,8 @@ Why this over a server app (Flask/FastAPI + hosting):
 1. **Who can see it: public, on GitHub Pages** (decided). Anyone with the URL can view it, so the
    site shows only league data (team names, stats, rosters), never cookies or IDs from `config.json`.
    Add `<meta name="robots" content="noindex">` so it stays out of search results.
-2. **Where the built site lives:** a `gh-pages` branch of this repo, served at
+2. **Where the built site lives:** on `main` (changed from a `gh-pages` branch): `web/` plus the
+   daily `web/league.json`, deployed by a GitHub Actions workflow and served at
    `https://renkecui.github.io/NBAFantasy26/`. Daily data commits stay off `main`.
    (Free GitHub Pages needs the repo to be public.)
 3. **Keep the Google Sheet?** Recommended: yes, keep both until the site has proven itself.
@@ -75,7 +76,9 @@ Plain HTML/CSS/JS, no build step (`index.html`, `style.css`, ES modules in `js/`
 
 ## Phase 4: Publish from the daily run ✅ Built (turn on with `publish_site`, see [SETUP step 7](SETUP.md#7-optional-publish-the-website))
 
-- New `nbafantasy/website/site_publisher.py` with `SitePublisher`: keep a `git worktree` of the `gh-pages`
+- New `nbafantasy/website/site_publisher.py` with `SitePublisher`. *Built version:* commits
+  `web/league.json` to `main` from a detached checkout in `data/site-deploy/`, and
+  `.github/workflows/pages.yml` deploys `web/`. *Original plan:* keep a `git worktree` of a `gh-pages`
   branch at `data/site-deploy/`, copy `web/` + `league.json` into it, commit only if something
   changed, and push. Each push uses the Mac's existing GitHub login, so no new secrets are needed.
 - One-time setup: create the orphan `gh-pages` branch and turn on Pages
@@ -110,7 +113,7 @@ on file**. There is still no always-on server to run.
 
 ```
 GitHub Actions (cron, every 15–30 min on game days)
-   └─ python fantasy_update.py --site-only ──► ESPN → validate → stats → league.json ──► push gh-pages
+   └─ python fantasy_update.py --site-only ──► ESPN → validate → stats → league.json ──► push to main
 
 browser ── GET league.json ─────────────────► GitHub Pages
         └─ POST /chat (league password) ────► Cloudflare Worker ──► Claude API
@@ -123,7 +126,7 @@ browser ── GET league.json ────────────────�
 - New workflow `.github/workflows/update-site.yml` on a `schedule:` cron (every 15–30 minutes
   during game hours) plus `workflow_dispatch` for a manual run.
 - It runs the same Python pipeline as the Mac (`EspnClient` → `LeagueValidator` → `LeagueStats` →
-  `LeagueJson`/`SiteBuilder`) with `--site-only`, then pushes to `gh-pages`. It takes over Phase 4's site
+  `LeagueJson`/`SiteBuilder`) with `--site-only`, then pushes `web/league.json` to `main`. It takes over Phase 4's site
   publishing from the Mac; the Mac job keeps updating the Google Sheet.
 - `league_id`, `season_year`, `my_team_name`, `espn_s2` and `SWID` become repository secrets.
   `Config` reads them from environment variables when `config.json` is missing.
