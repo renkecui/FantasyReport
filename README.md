@@ -59,6 +59,8 @@ scripts/uninstall.sh                 # stop the daily run
 
 - **[Setup](docs/SETUP.md)**: installation, daily use, and troubleshooting
 - **[Architecture](docs/ARCHITECTURE.md)**: flowchart, how a run works, code layout, safety checks, and design decisions
+- **[Website plan](docs/WEBSITE_PLAN.md)**: planned website on GitHub Pages, plus near-live data and chat bots on free services
+- **[TODO](docs/TODO.md)**: ideas and planned features
 
 ## Project layout
 
@@ -66,7 +68,7 @@ scripts/uninstall.sh                 # stop the daily run
 fantasy_update.py     entry point
 nbafantasy/           the code
 scripts/              install.sh, uninstall.sh
-docs/                 SETUP.md, ARCHITECTURE.md
+docs/                 SETUP.md, ARCHITECTURE.md, WEBSITE_PLAN.md, TODO.md
 config.example.json   template for config.json
 config.json           your league settings and ESPN cookies   (private, you create it)
 credentials.json      Google OAuth client                     (private, you add it)
