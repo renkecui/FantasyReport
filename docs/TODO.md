@@ -12,13 +12,12 @@ Create a webpage for the poject
 
 ## Features to Add
 
-### general manager
+### General Manager
 
 AI generated tips on what your team is lacking, and then looks at other teams to generate ideas for fair trades
 
-Example:
-    give away assists for another stat so I don't need to look at every other team to see who needs assists and can offer me something good
+Example: Give away assists for another stat so I don't need to look at every other team to see who needs assists and can offer me something good
 
 ### Charts
 
-Display charts show team ranking trends throughout the season 
+Display charts show team ranking trends throughout the season
