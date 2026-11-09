@@ -22,8 +22,9 @@ export class Page {
   render() { return []; }
 
   /** The nine category columns. "stats" mode shows values, "ranks" mode shows ranks.
-   *  Cells are always tinted by rank and sort best-first on the first click. */
-  categoryColumns(n, statsGroup, ranksGroup) {
+   *  Cells are always tinted by rank and sort best-first on the first click.
+   *  view(row) picks which { stats, ranks } to show; format(cat, value) formats a value. */
+  categoryColumns(n, statsGroup, ranksGroup, { view = r => r, format = Format.category } = {}) {
     const ranks = this.prefs.mode === "ranks";
     return this.league.categories.map(cat => ({
       key: "cat:" + cat,
@@ -31,20 +32,22 @@ export class Page {
       group: ranks ? ranksGroup : statsGroup,
       dir: "asc",
       title: `${cat}: click to sort (best first)` + (cat === "TO" ? ", fewest is best" : ""),
-      value: r => r.ranks[cat],
-      cell: r => (ranks ? String(r.ranks[cat]) : Format.category(cat, r.stats[cat])),
-      cellTitle: r => (ranks ? `${cat} ${Format.category(cat, r.stats[cat])}` : `Rank ${r.ranks[cat]} of ${n}`),
-      tint: r => RankColor.ofRank(r.ranks[cat], n),
+      value: r => view(r).ranks[cat],
+      cell: r => (ranks ? String(view(r).ranks[cat]) : format(cat, view(r).stats[cat])),
+      cellTitle: r => (ranks ? `${cat} ${format(cat, view(r).stats[cat])}` : `Rank ${view(r).ranks[cat]} of ${n}`),
+      tint: r => RankColor.ofRank(view(r).ranks[cat], n),
     }));
   }
 
-  /** A table with a Stats/Ranks switch that redraws it. Returns { toggle, table } holders. */
-  switchableTable(makeColumns, options) {
+  /** A table with a Stats/Ranks switch that redraws it. Returns { toggle, table } holders.
+   *  options may be a function, re-read on every redraw; extraControls(redraw) adds more switches. */
+  switchableTable(makeColumns, options, extraControls = () => []) {
     const table = el("div");
     const toggle = el("div", { class: "controls" });
     const draw = () => {
-      toggle.replaceChildren(Widgets.modeToggle(draw));
-      table.replaceChildren(new SortableTable(makeColumns(), options).render());
+      toggle.replaceChildren(...extraControls(draw), Widgets.modeToggle(draw));
+      const opts = typeof options === "function" ? options() : options;
+      table.replaceChildren(new SortableTable(makeColumns(), opts).render());
     };
     draw();
     return { toggle, table };

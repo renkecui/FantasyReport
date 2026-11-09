@@ -181,16 +181,21 @@ at most 31 characters, and unique.
 ## Website
 
 `league.json` (schema version 1) holds `teams` (name, color), `season` (record, category record,
-stats, league ranks, average rank), `weeks` (each team's matchup row with stats, weekly ranks,
+stats, league ranks, average rank, weeks played, and `per_week` averages with their own league
+ranks), `season_completed` (the same, from finished weeks only), `weeks` (each team's matchup row with stats, weekly ranks,
 average and overall rank) and `rosters` (players in lineup order with per-game averages and
 FG%/FT% as made ÷ attempted). It is built from an allow-list of fields, so nothing from
 `config.json` can reach it.
 
 `web/js/` loads it and renders three hash-routed pages: `#/season`, `#/weekly/<n>` and
 `#/team/<name>`. Every table sorts by any column; category cells are tinted by rank (green = 1st,
-red = last) and a Stats/Ranks switch shows values or ranks. The page uses no libraries or build step; the browser loads the ES modules directly.
+red = last) and a Stats/Ranks switch shows values or ranks. The Season page also has a
+Total/Per week switch (season sums, or `per_week` averages and ranks, which are fair to teams
+that had a bye) and, while a week is in progress, an Include/Exclude switch that shows `season` or
+`season_completed`. Every switch is remembered per viewer in `localStorage`. The page uses no libraries or build step; the browser loads the ES modules directly.
 
-`LeagueStats` mirrors the workbook formulas: weekly rank = 1 + teams strictly better that week
+`LeagueStats` mirrors the workbook formulas (and also builds `season_completed`, which leaves the
+week in progress out of everything): weekly rank = 1 + teams strictly better that week
 (TO: fewer is better), overall = rank of the average category rank, season W/L/T counts finished
 weeks only, category record and counting stats sum every week, FG%/FT% average the weekly
 percentages, and league rank uses the same tie rule ("1, 2, 2, 4").

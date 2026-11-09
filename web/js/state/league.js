@@ -32,6 +32,15 @@ export class League {
     const t = this.data.teams.find(x => x.name === name);
     return t ? t.color : "#cccccc";
   }
+  /** The week in progress, or undefined when every week is final. */
+  get liveWeek() { return this.weeks.find(w => !w.final); }
+  get finishedWeekCount() { return this.weeks.filter(w => w.final).length; }
+
+  /** Season totals with or without the week in progress (older league.json files only have "with"). */
+  seasonRows(includeCurrentWeek) {
+    return includeCurrentWeek || !this.data.season_completed ? this.data.season : this.data.season_completed;
+  }
+
   roster(name) { return this.data.rosters[name] || []; }
   seasonRow(name) { return this.data.season.find(r => r.team === name); }
   isMine(name) { return name === this.data.my_team; }

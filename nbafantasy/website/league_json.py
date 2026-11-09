@@ -37,6 +37,7 @@ class LeagueJson:
             "teams": [{"name": t, "color": "#" + Theme.PALETTE[i % len(Theme.PALETTE)]}
                       for i, t in enumerate(teams)],  # same colors as the workbook
             "season": [self._season_row(r) for r in self.stats.season],
+            "season_completed": [self._season_row(r) for r in self.stats.season_completed],
             "weeks": [{"number": wk.number, "final": wk.final,
                        "rows": [self._weekly_row(w) for w in weeks.get(wk.number, [])]}
                       for wk in data.weeks],
@@ -59,7 +60,11 @@ class LeagueJson:
         return {"team": r.team, "wins": r.wins, "losses": r.losses, "ties": r.ties,
                 "record": r.record, "cat_wins": r.cat_wins, "cat_losses": r.cat_losses,
                 "cat_ties": r.cat_ties, "avg_rank": cls.compact(r.avg_rank, 2),
-                "stats": {c: cls.compact(v) for c, v in r.stats.items()}, "ranks": r.ranks}
+                "stats": {c: cls.compact(v) for c, v in r.stats.items()}, "ranks": r.ranks,
+                "weeks": r.weeks,
+                "per_week": {"stats": {c: cls.compact(v, 2 if not Categories.is_percent(c) else 4)
+                                       for c, v in r.per_week_stats.items()},
+                             "ranks": r.per_week_ranks, "avg_rank": cls.compact(r.per_week_avg_rank, 2)}}
 
     @classmethod
     def _weekly_row(cls, w: WeeklyRow):

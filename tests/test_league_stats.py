@@ -85,6 +85,33 @@ class LeagueStatsTest(unittest.TestCase):
         to = {t: self.season(t).ranks["TO"] for t in "ABCD"}
         self.assertEqual(to, {"C": 1, "B": 2, "D": 4, "A": 3})
 
+    def test_completed_season_leaves_out_the_live_week(self):
+        a = next(r for r in self.s.season_completed if r.team == "A")
+        self.assertEqual(a.record, "1-0-0")
+        self.assertEqual((a.cat_wins, a.cat_losses, a.cat_ties), (6, 3, 0))
+        self.assertEqual(a.stats["PTS"], 600)
+        self.assertAlmostEqual(a.stats["FG%"], 0.50)
+        pts = {r.team: r.ranks["PTS"] for r in self.s.season_completed}
+        self.assertEqual(pts, {"A": 1, "B": 2, "C": 2, "D": 4})
+
+    def test_completed_season_equals_season_without_a_live_week(self):
+        data = LeagueData(teams=["A", "B", "C", "D"], weeks=[self.data.weeks[0]], rosters={})
+        s = LeagueStats(data)
+        self.assertEqual(s.season, s.season_completed)
+
+    def test_per_week_averages(self):
+        a, c = self.season("A"), self.season("C")
+        self.assertEqual((a.weeks, c.weeks), (2, 1))           # C had a bye in week 2
+        self.assertEqual(a.per_week_stats["PTS"], 500)          # (600 + 400) / 2
+        self.assertEqual(c.per_week_stats["PTS"], 550)
+        self.assertEqual(a.per_week_stats["FG%"], a.stats["FG%"])
+        # Totals favor teams with more weeks; per-week ranks don't.
+        self.assertEqual(a.ranks["PTS"], 2)
+        self.assertEqual(c.ranks["PTS"], 3)
+        self.assertEqual(c.per_week_ranks["PTS"], 2)
+        self.assertEqual(a.per_week_ranks["PTS"], 4)
+        self.assertAlmostEqual(a.per_week_avg_rank, sum(a.per_week_ranks.values()) / 9)
+
     def test_season_order_puts_my_team_first(self):
         self.assertEqual([r.team for r in self.s.season], ["C", "A", "B", "D"])
 

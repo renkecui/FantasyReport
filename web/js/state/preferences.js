@@ -6,12 +6,26 @@ export class Preferences {
 
   constructor() {
     if (Preferences.#instance) throw new Error("Preferences is a singleton; use Preferences.instance()");
-    this.mode = this.#load("mode", "stats");  // "stats" | "ranks"
+    this.mode = this.#load("mode", "stats");                    // "stats" | "ranks"
+    this.currentWeek = this.#load("currentWeek", "include");    // "include" | "exclude"
+    this.seasonStats = this.#load("seasonStats", "total");      // "total" | "perWeek"
+  }
+
+  /** Whether season stats are summed over the weeks or averaged per week. */
+  setSeasonStats(choice) {
+    this.seasonStats = choice;
+    this.#save("seasonStats", choice);
   }
 
   setMode(mode) {
     this.mode = mode;
     this.#save("mode", mode);
+  }
+
+  /** Whether season totals include the week in progress. */
+  setCurrentWeek(choice) {
+    this.currentWeek = choice;
+    this.#save("currentWeek", choice);
   }
 
   #load(key, fallback) {

@@ -26,15 +26,37 @@ export class Widgets {
       row.tiebreak ? el("span", { class: "tb", title: Widgets.TIEBREAK_NOTE }, "*") : null);
   }
 
+  /** A row of buttons where one is pressed. choices: [[value, label], ...] */
+  static segmented(ariaLabel, choices, current, onPick) {
+    return el("div", { class: "segmented", role: "group", "aria-label": ariaLabel },
+      choices.map(([value, label]) => el("button", {
+        type: "button", "aria-pressed": String(current === value), onclick: () => onPick(value),
+      }, label)));
+  }
+
   /** The Stats / Ranks switch. */
   static modeToggle(onChange) {
     const prefs = Preferences.instance();
-    const button = (mode, label) => el("button", {
-      type: "button", "aria-pressed": String(prefs.mode === mode),
-      onclick: () => { prefs.setMode(mode); onChange(); },
-    }, label);
-    return el("div", { class: "segmented", role: "group", "aria-label": "Show category values or ranks" },
-      button("stats", "Stats"), button("ranks", "Ranks"));
+    return Widgets.segmented("Show category values or ranks", [["stats", "Stats"], ["ranks", "Ranks"]],
+      prefs.mode, mode => { prefs.setMode(mode); onChange(); });
+  }
+
+  /** Season stats summed over the weeks or averaged per week. */
+  static seasonStatsToggle(onChange) {
+    const prefs = Preferences.instance();
+    return el("div", { class: "labeled-toggle" },
+      el("span", { class: "toggle-label" }, "Season stats"),
+      Widgets.segmented("Season stats summed or averaged per week", [["total", "Total"], ["perWeek", "Per week"]],
+        prefs.seasonStats, choice => { prefs.setSeasonStats(choice); onChange(); }));
+  }
+
+  /** Include or exclude the week in progress from season totals. */
+  static currentWeekToggle(weekNumber, onChange) {
+    const prefs = Preferences.instance();
+    return el("div", { class: "labeled-toggle" },
+      el("span", { class: "toggle-label" }, `Week ${weekNumber} (live)`),
+      Widgets.segmented(`Week ${weekNumber}, the week in progress`, [["include", "Include"], ["exclude", "Exclude"]],
+        prefs.currentWeek, choice => { prefs.setCurrentWeek(choice); onChange(); }));
   }
 
   static mineRow(r) { return League.instance().isMine(r.team) ? "mine" : null; }

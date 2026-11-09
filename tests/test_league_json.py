@@ -27,6 +27,14 @@ class LeagueJsonTest(unittest.TestCase):
         self.assertFalse(self.p["weeks"][-1]["final"])
         self.assertEqual(self.p["weeks"][-1]["rows"][0]["result"], "Live")
         self.assertEqual(len(self.p["season"]), 8)
+        self.assertEqual(len(self.p["season_completed"]), 8)
+        first = self.p["season"][0]
+        self.assertEqual(first["weeks"], 5)
+        self.assertAlmostEqual(first["per_week"]["stats"]["PTS"], first["stats"]["PTS"] / 5, places=2)
+        self.assertEqual(set(first["per_week"]["ranks"]), set(Categories.ALL))
+        live_pts = sum(r["stats"]["PTS"] for r in self.p["weeks"][-1]["rows"])
+        self.assertEqual(sum(r["stats"]["PTS"] for r in self.p["season"])
+                         - sum(r["stats"]["PTS"] for r in self.p["season_completed"]), live_pts)
         self.assertEqual(set(self.p["rosters"]), set(self.data.teams))
         player = self.p["rosters"][self.data.my_team][0]
         self.assertEqual(player["slot"], "PG")

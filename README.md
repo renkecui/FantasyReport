@@ -19,7 +19,8 @@ The league uses 9-category head-to-head scoring: FG%, FT%, 3PM, REB, AST, STL, B
 
 ## The website
 
-The same three tables as pages: **Season** (standings, season stats and league ranks), **Weekly**
+The same three tables as pages: **Season** (standings, season stats and league ranks, with switches for
+totals or per-week averages and to include or leave out the week in progress), **Weekly**
 (matchup cards and each week's category breakdown) and **Teams** (each roster, category ranks and
 matchup history). Columns sort with a click, cells are colored by rank, and a Stats/Ranks switch
 shows values or ranks. It's a static site built by the daily run (`web/` + `league.json`) and pushed
