@@ -1,17 +1,19 @@
 # ---- Private: never commit these ----
-# ESPN cookies (espn_s2, SWID) and league ID
+# Files you provide: ESPN cookies + league ID, and the Google OAuth client
 config.json
-# Google OAuth client secret and login token
 credentials.json
+# Everything the app writes: Google login token, sheet ID, sync state,
+# the local Excel copy, backups, the log and the run lock
+data/
+
+# Safety net: older versions wrote these to the project folder
 token.json
-# Your Google Sheet ID and sync info
 sheet_id.txt
 sync_state.json
-# League data and logs
 backups/
-*.xlsx
 update.log
 .update.lock
+*.xlsx
 
 # ---- Python / macOS clutter ----
 __pycache__/
