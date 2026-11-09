@@ -1,8 +1,8 @@
 # NBAFantasy26: ESPN → Google Sheets, every day at 8:00 AM
 
 Every morning at 8:00 AM this pulls your ESPN league data and
-updates one Google Sheet with Season Totals, Weekly Stats, and one Roster tab per team
-(your team first; each team's current players, refreshed on each run).
+updates one Google Sheet with Season Totals, Weekly Stats, and one tab per team named after
+the team (your team first; each team's current players, refreshed on each run).
 The sheet keeps the same link every day. A local Excel copy is also saved in `data/`.
 
 If your Mac is asleep at 8:00, the update runs as soon as it wakes up.

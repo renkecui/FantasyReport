@@ -284,10 +284,9 @@ class TeamRosterSheet(SheetWriter):
 
     @classmethod
     def tab_title(cls, team, used):
-        """'<team> Roster', made safe for Excel/Sheets: no []:*?/\\, at most 31 characters,
+        """The team's name, made safe for Excel/Sheets: no []:*?/\\, at most 31 characters,
         and unique (case-insensitive) among `used`, which is updated."""
-        clean = "".join("_" if ch in cls.INVALID_TITLE_CHARS else ch for ch in team).strip("' ") or "Team"
-        base = f"{clean} Roster"
+        base = "".join("_" if ch in cls.INVALID_TITLE_CHARS else ch for ch in team).strip("' ") or "Team"
         title, n = base[:31], 2
         while title.lower() in used:
             suffix = f" ({n})"
@@ -362,7 +361,9 @@ class WorkbookBuilder:
 
     def build(self):
         wb = Workbook()
-        wb.remove(wb.active)
+        default = wb.active  # a new Workbook starts with one empty sheet
+        if default is not None:
+            wb.remove(default)
         args = (wb, self.data, self.stamp, self.colors)
         weekly = WeeklyStatsSheet(*args)
         sheets = [SeasonTotalsSheet(*args, weekly=weekly, index=0), weekly]

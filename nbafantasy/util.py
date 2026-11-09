@@ -2,6 +2,9 @@ import os
 import subprocess
 import time
 from datetime import datetime
+from typing import Callable, TypeVar
+
+T = TypeVar("T")
 
 
 def log(msg):
@@ -39,15 +42,18 @@ class RetryPolicy:
             return False  # Google reports rate limits as 403; those clear up on retry
         return status in cls.PERMANENT_STATUS or type(e).__name__ in cls.PERMANENT_ERRORS
 
-    def run(self, what, fn):
-        for n in range(1, self.tries + 1):
+    def run(self, what: str, fn: Callable[[], T]) -> T:
+        """Returns fn()'s result, or raises its last error."""
+        n = 1
+        while True:
             try:
                 return fn()
             except Exception as e:
-                if self.is_permanent(e) or n == self.tries:
+                if self.is_permanent(e) or n >= self.tries:
                     raise
                 log(f"{what} failed (try {n}/{self.tries}): {e}. Retrying in {self.wait * n}s...")
                 self._sleep(self.wait * n)
+                n += 1
 
 
 class MacNotifier:
