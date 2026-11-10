@@ -1,3 +1,4 @@
+import { Dropdown } from "../components/dropdown.js";
 import { Widgets } from "../components/widgets.js";
 import { Page } from "./page.js";
 import { Session } from "../state/session.js";
@@ -22,13 +23,16 @@ export class WeeklyPage extends Page {
 
   picker() {
     const weeks = this.league.weeks, idx = this.index;
-    return el("div", { class: "controls" },
-      el("button", { class: "btn", type: "button", "aria-label": "Previous week", disabled: idx === 0,
-        onclick: () => WeeklyPage.go(weeks[idx - 1]) }, "‹"),
-      el("select", { "aria-label": "Week", onchange: e => WeeklyPage.go(weeks[Number(e.target.value)]) },
-        weeks.map((w, i) => el("option", { value: i, selected: i === idx }, `Week ${w.number}${w.final ? "" : " · Live"}`))),
-      el("button", { class: "btn", type: "button", "aria-label": "Next week", disabled: idx === weeks.length - 1,
-        onclick: () => WeeklyPage.go(weeks[idx + 1]) }, "›"));
+    return el("div", { class: "controls week-picker" },
+      el("button", { class: "week-arrow prev", type: "button", "aria-label": "Previous week", disabled: idx === 0,
+        onclick: () => WeeklyPage.go(weeks[idx - 1]) }),
+      new Dropdown({
+        label: "Week", selected: idx, onPick: i => WeeklyPage.go(weeks[i]),
+        // Only the most recent week can be live.
+        items: weeks.map((w, i) => ({ value: i, label: `Week ${w.number}${!w.final && i === weeks.length - 1 ? " · Live" : ""}` })),
+      }).render(),
+      el("button", { class: "week-arrow next", type: "button", "aria-label": "Next week", disabled: idx === weeks.length - 1,
+        onclick: () => WeeklyPage.go(weeks[idx + 1]) }));
   }
 
   /** One card per matchup; rows come in pairs (team, opponent). */

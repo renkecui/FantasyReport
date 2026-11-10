@@ -31,7 +31,12 @@ export class League {
   }
   get categories() { return this.data.categories; }
   get season() { return this.data.season; }
-  get weeks() { return this.data.weeks; }
+  /** Weeks up to the current one: a week after the one in progress isn't shown. */
+  get weeks() {
+    const all = this.data.weeks;
+    const live = all.findIndex(w => !w.final);
+    return live === -1 ? all : all.slice(0, live + 1);
+  }
 
   /** The week in progress, or undefined when every week is final. */
   get liveWeek() { return this.weeks.find(w => !w.final); }

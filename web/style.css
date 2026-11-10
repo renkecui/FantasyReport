@@ -297,6 +297,56 @@ body.locked .tabs, body.locked .site-footer { display: none; }
   padding: 6px 10px;
 }
 .btn { cursor: pointer; min-width: 36px; }
+
+/* Custom drop-down (components/dropdown.js), in the style of NBA.com's menus: Roboto,
+   a white panel, and at most --visible items before it scrolls. */
+.dropdown { position: relative; }
+.dropdown-button {
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 400 15px/1.2 var(--font-text);
+  color: var(--text); background: none; border: 0; border-radius: 8px;
+  padding: 7px 8px; cursor: pointer; white-space: nowrap;
+}
+/* No box, like the week arrows: the text and its bold caret turn orange on hover. */
+.dropdown-button:hover { color: var(--accent); }
+.dropdown-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dropdown-caret {
+  width: 8px; height: 8px; margin-top: -4px;
+  border-right: 3px solid currentColor; border-bottom: 3px solid currentColor; transform: rotate(45deg);
+}
+.dropdown-button[aria-expanded="true"] .dropdown-caret { transform: rotate(225deg); margin-top: 4px; }
+.dropdown-list {
+  --item: 42px;
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
+  min-width: 100%; max-height: calc(var(--item) * var(--visible)); overflow-y: auto;
+  margin: 0; padding: 0; list-style: none;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(16 24 40 / 0.18); outline: none;
+}
+.dropdown-item {
+  height: var(--item); display: flex; align-items: center; padding: 0 18px;
+  font: 400 15px/1 var(--font-text); color: var(--text);
+  white-space: nowrap; cursor: pointer; border-left: 3px solid transparent;
+}
+.dropdown-item.active { background: var(--surface-2); }
+.dropdown-item[aria-selected="true"] { border-left-color: var(--accent); }
+
+/* Previous / next week: bold chevrons with no box around them, right next to the drop-down. */
+.controls.week-picker { gap: 0; }
+.week-arrow {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 32px; padding: 0;
+  background: none; border: 0; border-radius: 50%; color: var(--text); cursor: pointer;
+}
+.week-arrow::before {
+  content: ""; width: 10px; height: 10px;
+  border-left: 3px solid currentColor; border-bottom: 3px solid currentColor;
+}
+.week-arrow.prev::before { transform: translateX(2px) rotate(45deg); }
+.week-arrow.next::before { transform: translateX(-2px) rotate(-135deg); }
+.week-arrow:hover:not(:disabled) { color: var(--accent); }
+.week-arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.week-arrow:disabled { opacity: 0.25; cursor: default; }
 .btn:disabled { opacity: 0.4; cursor: default; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
