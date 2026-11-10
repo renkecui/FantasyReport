@@ -23,6 +23,17 @@ that team's logged-in member.
   stay private to each team must be stored with the Worker (e.g. the run uploads them to Workers KV)
   and served only to the logged-in team.
 
+## Win chance
+
+Each matchup's chance to win this week, as a percentage for both teams (e.g. 62% / 38%), shown on
+the Weekly page and updated on every run.
+
+- Start from the 9 category totals so far this week, then estimate the rest of the week from each
+  player's per-game averages and the games they have left (a simulation run many times, counting
+  how often each team wins the most categories).
+- Needs the same extra ESPN data as the General Manager: each team's schedule of games this week.
+- Before the week starts it's based on averages only; on the last day it's close to 0% or 100%.
+
 ## Charts
 
 Charts of each team's rank trends through the season, colored with each team's theme (`TeamThemes`).
