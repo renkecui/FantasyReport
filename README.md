@@ -31,7 +31,7 @@ limited to files the app created, and a pre-commit hook blocks secrets from bein
 ```bash
 git clone https://github.com/renkecui/FantasyReport.git
 cd FantasyReport
-cp config.example.json config.json   # league ID, team name, ESPN cookies
+# create config.json: league ID, team name, ESPN cookies (docs/SETUP.md step 3)
 scripts/setup.sh                     # packages + Google login; needs credentials.json from Google Cloud
 ```
 

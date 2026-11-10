@@ -10,7 +10,7 @@ mkdir -p data
 SYS_PY="$(command -v python3 || true)"
 if [ -z "$SYS_PY" ]; then echo "python3 not found. Install Python 3 first (https://www.python.org/downloads/)."; exit 1; fi
 if [ ! -f credentials.json ]; then echo "Missing credentials.json. See docs/SETUP.md step 2."; exit 1; fi
-if [ ! -f config.json ]; then echo "Missing config.json. Run:  cp config.example.json config.json  then fill it in (docs/SETUP.md step 3)."; exit 1; fi
+if [ ! -f config.json ]; then echo "Missing config.json. Create it from the template in docs/SETUP.md step 3."; exit 1; fi
 if grep -q "PASTE_espn_s2_HERE" config.json; then echo "Add your ESPN cookies to config.json first (docs/SETUP.md step 3)."; exit 1; fi
 chmod 600 config.json credentials.json
 

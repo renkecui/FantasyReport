@@ -45,11 +45,18 @@ A private league needs two cookies from your ESPN login.
 1. In Chrome, open https://fantasy.espn.com while logged in.
 2. Press **Cmd + Option + I** → **Application** tab → **Cookies** → `https://fantasy.espn.com`.
 3. Copy the **Value** of `espn_s2` (a long string) and `SWID` (looks like `{ABCD-1234-...}`, keep the braces).
-4. Create your config file:
-   ```bash
-   cp config.example.json config.json
+4. Create `config.json` in the project folder with this content:
+   ```json
+   {
+     "league_id": 0,
+     "my_team_name": "YOUR_TEAM_NAME",
+     "sheet_title": "My League Fantasy Report",
+     "espn_s2": "PASTE_espn_s2_HERE",
+     "swid": "{PASTE-SWID-HERE}",
+     "publish_site": false
+   }
    ```
-5. Fill in `config.json`:
+5. Fill in the values:
 
    | Key | What to put |
    |---|---|

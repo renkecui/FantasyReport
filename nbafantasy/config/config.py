@@ -40,7 +40,7 @@ class Config:
     def from_env(cls, env: Mapping[str, str]):
         if not env.get(cls.ENV["league_id"]):
             raise SyncError("config.json not found and LEAGUE_ID not set. "
-                            f"Copy config.example.json to config.json (or set the environment variables).")
+                            "Create config.json (docs/SETUP.md step 3) or set the environment variables.")
         raw = {key: env.get(var, "") for key, var in cls.ENV.items()}
         raw["publish_site"] = raw["publish_site"].strip().lower() in ("1", "true", "yes")
         return cls.from_dict(raw)
