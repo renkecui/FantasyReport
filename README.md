@@ -3,7 +3,7 @@
 Daily reports for an ESPN fantasy basketball league (9-category head-to-head), as a shared Google
 Sheet and a members-only website.
 
-Every morning at 8:00 a scheduled job on a Mac pulls matchups, category stats and rosters from
+Twice a day, at 8:00 AM and 5:00 PM, a scheduled job on a Mac pulls matchups, category stats and rosters from
 ESPN, checks them, and then:
 
 - replaces the contents of one Google Sheet (same link every day, local Excel copy saved too), and
@@ -38,7 +38,7 @@ Full walkthrough (Google Cloud, ESPN cookies, website, Worker): **[docs/SETUP.md
 ## Usage
 
 ```bash
-python3 fantasy_update.py              # update now (what the 8:00 job runs)
+python3 fantasy_update.py              # update now (what the 8:00 / 17:00 job runs)
 python3 fantasy_update.py --excel      # local files only (.xlsx + data/site), publish nothing
 python3 fantasy_update.py --site-only  # build and publish only the website
 python3 fantasy_update.py --no-site    # skip the website this run

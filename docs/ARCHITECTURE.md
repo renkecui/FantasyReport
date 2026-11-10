@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TD
-    S["launchd · 8:00 AM daily<br/>or python3 fantasy_update.py"] --> E["fantasy_update.py<br/>switch to .venv, Application().main()"]
+    S["launchd · 8:00 AM + 5:00 PM daily<br/>or python3 fantasy_update.py"] --> E["fantasy_update.py<br/>switch to .venv, Application().main()"]
     E --> P["Paths.prepare()<br/>create data/, move old files"]
     P --> K{"RunLock<br/>another run going?"}
     K -- yes --> X["Stop: SyncError"]
@@ -35,7 +35,7 @@ Back to the [README](../README.md) · See also [Setup](SETUP.md)
 
 ## How a run works
 
-1. **Start.** launchd runs `fantasy_update.py` at 8:00 AM, or you run it by hand. If `.venv/`
+1. **Start.** launchd runs `fantasy_update.py` at 8:00 AM and 5:00 PM, or you run it by hand. If `.venv/`
    exists, the script restarts itself with the `.venv` Python so the right packages load.
 2. **Prepare.** `Paths.prepare()` creates `data/` and moves files that older versions left in
    the project folder.

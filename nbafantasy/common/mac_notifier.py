@@ -5,7 +5,7 @@ from .singleton import Singleton
 
 
 class MacNotifier(metaclass=Singleton):
-    """Shows a macOS notification so a failed 8am run doesn't go unnoticed.
+    """Shows a macOS notification so a failed scheduled run doesn't go unnoticed.
     Where osascript doesn't exist (e.g. Linux), notifications are only logged."""
 
     # Text is passed as arguments, not inside the script, so quotes/backslashes can't break it.

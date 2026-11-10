@@ -1,5 +1,5 @@
 #!/bin/bash
-# One-time setup: installs packages, logs in to Google, runs once, then schedules 8:00 AM daily.
+# One-time setup: installs packages, logs in to Google, runs once, then schedules 8:00 AM and 5:00 PM daily.
 set -e
 DIR="$(cd "$(dirname "$0")/.." && pwd)"   # project folder (this script lives in scripts/)
 cd "$DIR"
@@ -37,7 +37,10 @@ cat > "$PLIST" << PL
   <key>Label</key><string>com.renke.fantasyupdate</string>
   <key>ProgramArguments</key><array><string>$PY</string><string>$DIR/fantasy_update.py</string></array>
   <key>WorkingDirectory</key><string>$DIR</string>
-  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+  <key>StartCalendarInterval</key><array>
+    <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>17</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
   <key>StandardOutPath</key><string>$DIR/data/update.log</string>
   <key>StandardErrorPath</key><string>$DIR/data/update.log</string>
 </dict></plist>
@@ -48,5 +51,5 @@ launchctl load "$PLIST"
 # macOS grants Full Disk Access to the real program file, not the .venv shortcut.
 REAL_PY="$("$PY" -c 'import os, sys; print(os.path.realpath(sys.executable))')"
 echo ""
-echo "Done. It will run every day at 8:00 AM."
+echo "Done. It will run every day at 8:00 AM and 5:00 PM."
 echo "Next: give this Python Full Disk Access (README Step 4): $REAL_PY"

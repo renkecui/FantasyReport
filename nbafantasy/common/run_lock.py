@@ -6,7 +6,7 @@ from .sync_error import SyncError
 
 
 class RunLock:
-    """Stops two updates from running at the same time (e.g. 8am run + manual run)."""
+    """Stops two updates from running at the same time (e.g. a scheduled run + a manual run)."""
 
     MAX_AGE = 6 * 60 * 60  # a lock older than this is treated as stale even if its PID is in use
 

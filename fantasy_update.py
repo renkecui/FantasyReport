@@ -2,7 +2,7 @@
 """
 Fantasy Report: pull ESPN fantasy basketball league data and update a Google Sheet.
 
-  python3 fantasy_update.py           # normal run (what the 8am schedule does)
+  python3 fantasy_update.py           # normal run (what the 8am / 5pm schedule does)
   python3 fantasy_update.py --login   # sign in to Google again (first time, or if the login expired)
   python3 fantasy_update.py --excel   # local files only: .xlsx + website in data/site, publish nothing
   python3 fantasy_update.py --site-only  # build and publish only the website (GitHub Pages)

@@ -73,13 +73,13 @@ This:
 2. Opens your browser to sign in to Google. Pick your account and click **Allow**.
    If you see "Google hasn't verified this app", click **Advanced → Go to Fantasy Report**.
 3. Runs once and prints the link to your new Google Sheet.
-4. Schedules a daily 8:00 AM run with launchd. If the Mac is asleep, it runs when it wakes.
+4. Schedules runs at 8:00 AM and 5:00 PM every day with launchd. If the Mac is asleep, it runs when it wakes.
 5. Turns on the pre-commit hook that blocks secrets from being committed.
 
 ## 5. Let the scheduled run read the folder (Full Disk Access)
 
 macOS blocks background programs from reading protected folders such as Downloads and
-Documents, so the 8:00 AM run can fail even though running it by hand works.
+Documents, so the scheduled runs can fail even though running it by hand works.
 
 1. Open **System Settings → Privacy & Security → Full Disk Access**.
 2. Click **+**, press **Cmd + Shift + G**, and paste the Python path that `scripts/install.sh`

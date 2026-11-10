@@ -15,7 +15,7 @@ from ..config.paths import Paths
 
 class Application(metaclass=Singleton):
     """The process: project paths, the run lock, logging and failure notifications.
-    There is one per process; fantasy_update.py (and so the 8am schedule) calls main()."""
+    There is one per process; fantasy_update.py (and so the 8am / 5pm schedule) calls main()."""
 
     def __init__(self, root: Optional[str] = None):
         root = root or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
