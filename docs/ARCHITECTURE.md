@@ -161,8 +161,9 @@ deliberately *not* singletons, so tests can build them with different values.
 | `components/account-menu.js` | `AccountMenu` | The header's menu for the logged-in team: "Team theme…" and "Log out" |
 | `components/login-gate.js` | `LoginGate` | The login screen shown until someone logs in (username = team name, any case; league password) |
 | `components/theme-dialog.js` | `ThemeDialog` | Pick a free theme |
-| `pages/page.js` → `season-page.js`, `weekly-page.js`, `team-page.js` | `Page` → `SeasonPage`, `WeeklyPage`, `TeamPage` | One class per page; the base class builds the category columns |
-| `router.js` | `Router` | Maps `#/season`, `#/weekly/<n>`, `#/team/<name>` to a page |
+| `pages/page.js` → `season-page.js`, `weekly-page.js`, `team-page.js`, `charts-page.js` | `Page` → `SeasonPage`, `WeeklyPage`, `TeamPage`, `ChartsPage` | One class per page; the base class builds the category columns |
+| `components/line-chart.js` | `LineChart` | A one-line-per-team SVG chart (legend, crosshair with a readout under the chart, table view) |
+| `router.js` | `Router` | Maps `#/season`, `#/weekly/<n>`, `#/team/<name>`, `#/charts` to a page |
 | `app.js` | `App` (singleton) | Loads the data, then shows the login screen or the current page |
 | `main.js` | (none) | Entry point: `App.instance().start()` |
 
@@ -230,7 +231,7 @@ at most 31 characters, and unique.
 
 It is built from an allow-list of fields, so nothing from `config.json` can reach it.
 
-`web/js/` renders three hash-routed pages (`#/season`, `#/weekly/<n>`, `#/team/<name>`) with no
+`web/js/` renders four hash-routed pages (`#/season`, `#/weekly/<n>`, `#/team/<name>`, `#/charts`) with no
 libraries or build step. Every table sorts by any column, category cells are tinted by rank
 (green = 1st, red = last), and a Stats/Ranks switch shows values or ranks. The Season page also
 switches between totals and per-week averages (fair to teams that had a bye) and, while a week is

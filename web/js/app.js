@@ -9,10 +9,11 @@
  *   TeamThemes (singleton)        each team's color theme
  *   Widgets                       small shared pieces: team names, result badges, switches
  *   SortableTable                 a table whose columns sort on click
+ *   LineChart, Dropdown           a team-by-week line chart; a drop-down list
  *   LoginGate                     the login screen shown instead of the site until you log in
  *   AccountMenu, ThemeDialog      the header's account menu and its theme dialog
- *   Page → SeasonPage, WeeklyPage, TeamPage
- *   Router                        #/season, #/weekly/<n>, #/team/<name> → a page
+ *   Page → SeasonPage, WeeklyPage, TeamPage, ChartsPage
+ *   Router                        #/season, #/weekly/<n>, #/team/<name>, #/charts → a page
  *   App (singleton)               loads everything, draws the header, starts the router
  */
 import { AccountMenu } from "./components/account-menu.js";

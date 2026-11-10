@@ -9,6 +9,11 @@ export class Format {
   static category(cat, v) { return Format.PCT.has(cat) ? Format.pct(v) : Format.int(v); }
   /** A per-week average: percentages as usual, counting stats with one decimal. */
   static perWeek(cat, v) { return Format.PCT.has(cat) ? Format.pct(v) : Format.one(v); }
+  /** 1 → "1st", 2 → "2nd", 11 → "11th" */
+  static ordinal(n) {
+    const s = ["th", "st", "nd", "rd"], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
   static score(r) { return `${r.cat_wins}-${r.cat_losses}-${r.cat_ties}`; }
   static season(year) { return `${year - 1}–${String(year).slice(-2)}`; }
 }

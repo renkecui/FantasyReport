@@ -1,11 +1,12 @@
+import { ChartsPage } from "./pages/charts-page.js";
 import { SeasonPage } from "./pages/season-page.js";
 import { TeamPage } from "./pages/team-page.js";
 import { WeeklyPage } from "./pages/weekly-page.js";
 import { League } from "./state/league.js";
 
-/** Maps the address hash (#/season, #/weekly/<n>, #/team/<name>) to a page and draws it. */
+/** Maps the address hash (#/season, #/weekly/<n>, #/team/<name>, #/charts) to a page and draws it. */
 export class Router {
-  static PAGES = { season: SeasonPage, weekly: WeeklyPage, team: TeamPage };
+  static PAGES = { season: SeasonPage, weekly: WeeklyPage, team: TeamPage, charts: ChartsPage };
   static DEFAULT = "season";
 
   /** blocked(): true while the login screen is up, so links and the back button show nothing. */
