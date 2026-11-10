@@ -15,7 +15,7 @@ It runs on GitHub's servers, so no computer needs to be on.
 |---|---|
 | **Season Totals** / Season | Records, category wins/losses, season stats and league ranks |
 | **Weekly Stats** / Weekly | Every matchup by week with category stats and weekly ranks |
-| **One tab per team** / Teams | Each roster with per-game averages, ranks and matchup history |
+| **One tab per team** / Teams | Each roster with per-game averages (season, or week by week on the website), ranks and matchup history |
 
 **The website** has sortable, rank-colored tables that work on phones. Visitors log in first:
 username = their team name, password = the league password. Each team has its own color theme,

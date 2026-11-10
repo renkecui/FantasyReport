@@ -10,6 +10,20 @@ export class Preferences {
     this.mode = this.#load("mode", "stats");                    // "stats" | "ranks"
     this.currentWeek = this.#load("currentWeek", "include");    // "include" | "exclude"
     this.seasonStats = this.#load("seasonStats", "total");      // "total" | "perWeek"
+    this.playerStats = this.#load("playerStats", "season");     // "season" | "week" (Teams roster)
+    this.playerWeekStats = this.#load("playerWeekStats", "perGame"); // "perGame" | "total"
+  }
+
+  /** Whether the Teams roster shows season averages or one week's games. */
+  setPlayerStats(choice) {
+    this.playerStats = choice;
+    this.#save("playerStats", choice);
+  }
+
+  /** A week's player stats as per-game averages or totals. */
+  setPlayerWeekStats(choice) {
+    this.playerWeekStats = choice;
+    this.#save("playerWeekStats", choice);
   }
 
   /** Whether season stats are summed over the weeks or averaged per week. */

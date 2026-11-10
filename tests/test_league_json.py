@@ -41,6 +41,17 @@ class LeagueJsonTest(unittest.TestCase):
         self.assertEqual(player["slot"], "PG")
         self.assertIn("FG%", player["stats"])
 
+    def test_player_weeks_are_summed_stats_with_shooting_percentages(self):
+        source = self.data.rosters[self.data.teams[0]].in_lineup_order()[0]
+        player = self.p["rosters"][self.data.teams[0]][0]
+        self.assertTrue(source.weeks)
+        self.assertEqual(list(player["weeks"]), [str(w) for w in sorted(source.weeks)])
+        week, pw = sorted(source.weeks.items())[0]
+        out = player["weeks"][str(week)]
+        self.assertEqual(out["games"], pw.games)
+        self.assertAlmostEqual(out["totals"]["PTS"], pw.totals["PTS"], places=1)
+        self.assertAlmostEqual(out["totals"]["FG%"], pw.totals["FGM"] / pw.totals["FGA"], places=3)
+
     def test_payload_is_json_and_has_no_config_fields(self):
         text = json.dumps(self.p)
         for secret in ("espn_s2", "swid", "league_id", "sheet_id"):

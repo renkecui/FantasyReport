@@ -1,3 +1,4 @@
+import { Dropdown } from "./dropdown.js";
 import { Preferences } from "../state/preferences.js";
 import { Session } from "../state/session.js";
 import { TeamThemes } from "../state/team-themes.js";
@@ -62,6 +63,36 @@ export class Widgets {
       el("span", { class: "toggle-label" }, `Week ${weekNumber} (live)`),
       Widgets.segmented(`Week ${weekNumber}, the week in progress`, [["include", "Include"], ["exclude", "Exclude"]],
         prefs.currentWeek, choice => { prefs.setCurrentWeek(choice); onChange(); }));
+  }
+
+  /** ‹ Week n › arrows around a week drop-down. weeks: the league's weeks; onPick(index). */
+  static weekPicker(weeks, index, onPick) {
+    return el("div", { class: "controls week-picker" },
+      el("button", { class: "week-arrow prev", type: "button", "aria-label": "Previous week", disabled: index === 0,
+        onclick: () => onPick(index - 1) }),
+      new Dropdown({
+        label: "Week", selected: index, onPick,
+        // Only the most recent week can be live.
+        items: weeks.map((w, i) => ({ value: i, label: `Week ${w.number}${!w.final && i === weeks.length - 1 ? " · Live" : ""}` })),
+      }).render(),
+      el("button", { class: "week-arrow next", type: "button", "aria-label": "Next week", disabled: index === weeks.length - 1,
+        onclick: () => onPick(index + 1) }));
+  }
+
+  /** Teams roster: season per-game averages or one week's games. */
+  static playerStatsToggle(onChange) {
+    const prefs = Preferences.instance();
+    return el("div", { class: "labeled-toggle" },
+      el("span", { class: "toggle-label" }, "Player stats"),
+      Widgets.segmented("Player stats for the season or one week", [["season", "Season"], ["week", "Weekly"]],
+        prefs.playerStats, choice => { prefs.setPlayerStats(choice); onChange(); }));
+  }
+
+  /** A week's player stats as per-game averages or totals. */
+  static playerWeekStatsToggle(onChange) {
+    const prefs = Preferences.instance();
+    return Widgets.segmented("Week's player stats per game or summed", [["perGame", "Per game"], ["total", "Total"]],
+      prefs.playerWeekStats, choice => { prefs.setPlayerWeekStats(choice); onChange(); });
   }
 
   static mineRow(r) { return Session.instance().isMine(r.team) ? "mine" : null; }

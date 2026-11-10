@@ -1,16 +1,20 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar, Dict
+
+from .player_week import PlayerWeek
 
 
 @dataclass(frozen=True)
 class Player:
-    """One player on a fantasy roster: lineup slot, NBA team, status and per-game stats."""
+    """One player on a fantasy roster: lineup slot, NBA team, status, season per-game stats and
+    each week's games (whichever team had him then)."""
     slot: str        # ESPN lineup slot, e.g. "PG", "UT", "BE", "IR"
     name: str
     nba_team: str
     positions: str   # e.g. "PG, SG"
     status: str      # "" when healthy, else "DTD", "O", "IR", "SUSP", ...
     stats: Dict[str, float]  # season per-game averages, keys from PLAYER_STATS
+    weeks: Dict[int, PlayerWeek] = field(default_factory=dict)  # by fantasy week; weeks without games left out
 
     # ESPN slot names (espn_api POSITION_MAP). Starters first, then UTIL, bench, IR.
     SLOT_ORDER: ClassVar[Dict[str, int]] = {

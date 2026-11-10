@@ -1,12 +1,15 @@
 import json
 import urllib.request
+from typing import Dict
 
+from ..common.logger import Logger
 from ..common.retry_policy import RetryPolicy
 from ..common.sync_error import SyncError
 from ..models.categories import Categories
 from ..models.league_data import LeagueData
 from ..models.matchup_row import MatchupRow
 from ..models.player import Player
+from ..models.player_week import PlayerWeek
 from ..models.team_roster import TeamRoster
 from ..models.week import Week
 
@@ -71,7 +74,9 @@ class EspnClient:
         current = league.currentMatchupPeriod
         weeks = [self._week(league, names, mp, current) for mp in range(1, current + 1)]
         # Rosters come with the League object, so every team's roster costs no extra request.
-        rosters = {names[t.team_id]: self._roster(names[t.team_id], t) for t in league.teams}
+        # Each player's games this season take one more request for all of them.
+        player_weeks = self._player_weeks(league, current)
+        rosters = {names[t.team_id]: self._roster(names[t.team_id], t, player_weeks) for t in league.teams}
         order = [names[t.team_id] for t in sorted(league.teams, key=lambda t: t.team_id)]
         return LeagueData(teams=order, weeks=weeks, rosters=rosters, my_team=self.config.my_team_name,
                           season_year=self.year, draft_order=self.draft_order(league, names))
@@ -116,10 +121,49 @@ class EspnClient:
             cat_ties=getattr(box, f"{side}_ties"), result=result,
             stats={c: (stats.get(c) or {}).get("value", 0) for c in Categories.ALL})
 
-    def _roster(self, team_name, team):
-        return TeamRoster(team=team_name, players=[self._player(p) for p in team.roster])
+    def _player_weeks(self, league, current):
+        """{playerId: {week: PlayerWeek}} for every rostered player, from ESPN's player cards.
+        Empty if ESPN won't give them: the website then shows season stats only."""
+        ids = [p.playerId for t in league.teams for p in t.roster]
+        if not ids:
+            return {}
+        try:
+            cards = league.player_info(playerId=ids)
+        except Exception as e:  # a nice-to-have: never fail the whole update for it
+            Logger().warning(f"Couldn't get players' game-by-game stats from ESPN ({e}); "
+                             "the website shows season stats only.")
+            return {}
+        cards = cards if isinstance(cards, list) else [cards] if cards else []
+        periods = {mp: league.matchup_ids.get(mp, []) for mp in range(1, current + 1)}
+        return {c.playerId: self.group_games(c.stats or {}, periods) for c in cards}
 
-    def _player(self, p):
+    @staticmethod
+    def group_games(stats, periods) -> Dict[int, PlayerWeek]:
+        """Sum a player's games into fantasy weeks.
+
+        stats: espn_api Player.stats, where a game's entry is keyed by its scoring period (day),
+        e.g. "12": {"total": {"PTS": 31, ...}}. periods: {week: [scoring period ids]}.
+        Weeks without a game played are left out."""
+        weeks = {}
+        for week, days in periods.items():
+            games, totals = 0, {k: 0.0 for k in Categories.PLAYER_STATS}
+            for day in days:
+                game = (stats.get(str(day)) or {}).get("total") or {}
+                if not (game.get("GP") or game.get("MIN")):
+                    continue  # no game that day, or did not play
+                games += 1
+                for k in Categories.PLAYER_STATS:
+                    totals[k] += game.get(k) or 0
+            if games:
+                weeks[week] = PlayerWeek(games=games, totals=totals)
+        return weeks
+
+    def _roster(self, team_name, team, player_weeks=None):
+        weeks = player_weeks or {}
+        return TeamRoster(team=team_name, players=[self._player(p, weeks.get(getattr(p, "playerId", None)))
+                                                   for p in team.roster])
+
+    def _player(self, p, weeks=None):
         key = f"{self.year}_total"
         avg = ((p.stats or {}).get(key) or {}).get("avg") or {}
         status = "" if p.injuryStatus in self.HEALTHY else self.STATUS_ABBR.get(p.injuryStatus, p.injuryStatus)
@@ -127,4 +171,5 @@ class EspnClient:
             slot=p.lineupSlot, name=p.name, nba_team=p.proTeam,
             positions=", ".join(s for s in p.eligibleSlots if s in self.POSITIONS),
             status=status,
-            stats={k: avg.get(k, 0) for k in Categories.PLAYER_STATS})
+            stats={k: avg.get(k, 0) for k in Categories.PLAYER_STATS},
+            weeks=weeks or {})

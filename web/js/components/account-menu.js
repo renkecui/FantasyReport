@@ -27,6 +27,8 @@ export class AccountMenu {
       el("summary", { "aria-label": `Logged in as ${session.team}` }, Widgets.dot(session.team),
         el("span", { class: "account-name" }, session.team)),
       el("div", { class: "menu", role: "menu" },
+        el("a", { href: Widgets.teamHref(session.team), role: "menuitem", onclick: () => { menu.open = false; } },
+          "My team"),
         el("button", { type: "button", role: "menuitem", onclick: () => {
           menu.open = false;
           new ThemeDialog(this.onChange).open();

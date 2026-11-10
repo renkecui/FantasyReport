@@ -1,7 +1,7 @@
 """A made-up league for tests and for previewing the website without ESPN."""
 import random
 
-from nbafantasy.models import Categories, LeagueData, MatchupRow, Player, TeamRoster, Week
+from nbafantasy.models import Categories, LeagueData, MatchupRow, Player, PlayerWeek, TeamRoster, Week
 
 
 class SampleLeague:
@@ -36,7 +36,7 @@ class SampleLeague:
         return w, l, t
 
     @staticmethod
-    def _player(rng, slot):
+    def _player(rng, slot, n_weeks=0):
         fgm, ftm = rng.uniform(2, 10), rng.uniform(0.5, 7)
         stats = {"MIN": rng.uniform(14, 37), "FGM": fgm, "FGA": fgm / rng.uniform(0.42, 0.6),
                  "FTM": ftm, "FTA": ftm / rng.uniform(0.65, 0.92), "3PM": rng.uniform(0, 4),
@@ -46,7 +46,19 @@ class SampleLeague:
                       nba_team=rng.choice(SampleLeague.NBA),
                       positions=", ".join(sorted(rng.sample(["PG", "SG", "SF", "PF", "C"], rng.randint(1, 2)))),
                       status=rng.choice(["", "", "", "", "", "DTD", "O"]) if slot != "IR" else "IR",
-                      stats={k: round(stats[k], 1) for k in Categories.PLAYER_STATS})
+                      stats={k: round(stats[k], 1) for k in Categories.PLAYER_STATS},
+                      weeks=SampleLeague._player_weeks(rng, stats, n_weeks))
+
+    @staticmethod
+    def _player_weeks(rng, per_game, n_weeks):
+        """0-4 games a week around the season averages; weeks without games left out."""
+        weeks = {}
+        for n in range(1, n_weeks + 1):
+            games = rng.randint(0, 4)
+            if games:
+                weeks[n] = PlayerWeek(games, {k: round(per_game[k] * games * rng.uniform(0.7, 1.3), 1)
+                                              for k in Categories.PLAYER_STATS})
+        return weeks
 
     @classmethod
     def build(cls, n_weeks=5, seed=26) -> LeagueData:
@@ -70,5 +82,5 @@ class SampleLeague:
                 wk.rows.append(MatchupRow(a, b, wa, la, ta, ra, sa))
                 wk.rows.append(MatchupRow(b, a, la, wa, ta, rb, sb))
             weeks.append(wk)
-        rosters = {t: TeamRoster(t, [cls._player(rng, s) for s in cls.SLOTS]) for t in cls.TEAMS}
+        rosters = {t: TeamRoster(t, [cls._player(rng, s, n_weeks) for s in cls.SLOTS]) for t in cls.TEAMS}
         return LeagueData(teams=list(cls.TEAMS), weeks=weeks, rosters=rosters, my_team=cls.TEAMS[2])

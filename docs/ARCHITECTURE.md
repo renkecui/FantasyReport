@@ -197,7 +197,8 @@ The league password and token key are Worker secrets, never in the repo. `worker
 | `Week` | `number`, `final` (finished or in progress), `rows` |
 | `MatchupRow` | One team's side of a matchup: opponent, category W/L/T, result (`W`/`L`/`T`/`Live`), the 9 category stats |
 | `TeamRoster` | A team's `players`, sortable into lineup order |
-| `Player` | Lineup slot, name, NBA team, positions, injury status, season per-game averages |
+| `Player` | Lineup slot, name, NBA team, positions, injury status, season per-game averages, `weeks` (week → `PlayerWeek`) |
+| `PlayerWeek` | One player's games in one fantasy week: how many, and their summed stats |
 
 The league uses 9-category head-to-head scoring: FG%, FT%, 3PM, REB, AST, STL, BLK, TO, PTS.
 For TO, fewer is better.
@@ -222,7 +223,10 @@ at most 31 characters, and unique.
 - `season`: record, category record, stats, league ranks, average rank, weeks played, and
   `per_week` averages with their own ranks; `season_completed` is the same from finished weeks only
 - `weeks`: each team's matchup row with stats, weekly ranks, average and overall rank
-- `rosters`: players in lineup order with per-game averages (FG%/FT% as made ÷ attempted)
+- `rosters`: players in lineup order with per-game averages (FG%/FT% as made ÷ attempted), and
+  `weeks`: `{"<week>": {"games", "totals"}}` with each week's summed stats (weeks without a game left out).
+  They come from ESPN's player cards (one extra request), summed by the days in each week; if that
+  request fails the update still runs and the Teams page shows season stats only.
 
 It is built from an allow-list of fields, so nothing from `config.json` can reach it.
 

@@ -85,10 +85,17 @@ class LeagueJson:
         players = roster.in_lineup_order() if roster else []
         out = []
         for p in players:
-            s = {k: self.compact(p.stats.get(k, 0), 2) for k in Categories.PLAYER_STATS}
-            fga, fta = p.stats.get("FGA", 0), p.stats.get("FTA", 0)
-            s["FG%"] = self.compact(p.stats.get("FGM", 0) / fga if fga else 0.0)  # made ÷ attempted, like the sheet
-            s["FT%"] = self.compact(p.stats.get("FTM", 0) / fta if fta else 0.0)
             out.append({"slot": p.slot_label, "name": p.name, "nba_team": p.nba_team,
-                        "positions": p.positions, "status": p.status, "stats": s})
+                        "positions": p.positions, "status": p.status, "stats": self._player_stats(p.stats, 2),
+                        # each week's summed stats; the website divides by games for per-game averages
+                        "weeks": {str(w): {"games": pw.games, "totals": self._player_stats(pw.totals, 1)}
+                                  for w, pw in sorted(p.weeks.items())}})
         return out
+
+    @classmethod
+    def _player_stats(cls, stats, digits):
+        s = {k: cls.compact(float(stats.get(k, 0)), digits) for k in Categories.PLAYER_STATS}
+        fga, fta = stats.get("FGA", 0), stats.get("FTA", 0)
+        s["FG%"] = cls.compact(stats.get("FGM", 0) / fga if fga else 0.0)  # made ÷ attempted, like the sheet
+        s["FT%"] = cls.compact(stats.get("FTM", 0) / fta if fta else 0.0)
+        return s
