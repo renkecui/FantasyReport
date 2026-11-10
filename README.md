@@ -9,6 +9,9 @@ ESPN, checks them, and then:
 - replaces the contents of one Google Sheet (same link every day, local Excel copy saved too), and
 - publishes the same data to a website on GitHub Pages.
 
+The same run can also happen on GitHub Actions instead, so the Mac doesn't need to be on
+([setup](docs/SETUP.md#9-optional-run-on-github-instead-of-the-mac)).
+
 | Sheet tab / web page | Shows |
 |---|---|
 | **Season Totals** / Season | Records, category wins/losses, season stats and league ranks |

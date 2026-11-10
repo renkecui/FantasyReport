@@ -1,0 +1,113 @@
+# Fetches the league from ESPN at 8 AM and 5 PM New York time, on GitHub's servers (no Mac needed):
+# updates the Google Sheet and commits web/league.json to main, then deploys the website.
+# Settings come from repository secrets; see docs/SETUP.md, "Run on GitHub instead of the Mac".
+name: Update league data
+
+on:
+  schedule:
+    # Cron runs in UTC, and New York is UTC-4 in summer and UTC-5 in winter, so each time is
+    # scheduled at both UTC hours; the first step lets only the one that is 8 AM / 5 PM continue.
+    - cron: "0 12,13 * * *"
+    - cron: "0 21,22 * * *"
+  workflow_dispatch:  # "Run workflow" button in the Actions tab (runs at any time)
+
+permissions:
+  contents: write  # push the web/league.json commit
+
+concurrency:
+  group: league-update  # never two updates at once (replaces the Mac's run lock)
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      ran: ${{ steps.when.outputs.go }}
+    steps:
+      - name: Only at 8 AM and 5 PM in New York, once the secrets are set
+        id: when
+        env:
+          CONFIGURED: ${{ secrets.LEAGUE_ID != '' }}
+        run: |
+          hour=$(TZ=America/New_York date +%H)
+          if [ "$CONFIGURED" != "true" ]; then
+            echo "The LEAGUE_ID secret isn't set yet (docs/SETUP.md step 9)."
+            [ "$GITHUB_EVENT_NAME" = "schedule" ] && echo "go=false" >> "$GITHUB_OUTPUT" && exit 0
+            echo "::error::Add the repository secrets first."; exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ] || [ "$hour" = "08" ] || [ "$hour" = "17" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "It's ${hour}:xx in New York; the other scheduled run handles today. Skipping."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.when.outputs.go == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - if: steps.when.outputs.go == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - if: steps.when.outputs.go == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Set up the Google login and git
+        if: steps.when.outputs.go == 'true'
+        id: setup
+        env:
+          GOOGLE_TOKEN_JSON: ${{ secrets.GOOGLE_TOKEN_JSON }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p data
+          if [ -z "$GOOGLE_TOKEN_JSON" ]; then
+            echo "No GOOGLE_TOKEN_JSON secret: updating only the website."
+            echo "flags=--site-only" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$GOOGLE_SHEET_ID" ]; then
+            # Without it every run would make a brand-new sheet.
+            echo "::error::GOOGLE_SHEET_ID secret is missing (the ID from data/sheet_id.txt on the Mac)."
+            exit 1
+          fi
+          (umask 077; printf '%s' "$GOOGLE_TOKEN_JSON" > data/token.json)
+          printf '%s' "$GOOGLE_SHEET_ID" > data/sheet_id.txt
+          echo "flags=" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch from ESPN and publish
+        if: steps.when.outputs.go == 'true'
+        env:
+          LEAGUE_ID: ${{ secrets.LEAGUE_ID }}
+          SEASON_YEAR: ${{ secrets.SEASON_YEAR }}
+          ESPN_S2: ${{ secrets.ESPN_S2 }}
+          ESPN_SWID: ${{ secrets.ESPN_SWID }}
+          MY_TEAM_NAME: ${{ secrets.MY_TEAM_NAME }}
+          SHEET_TITLE: ${{ secrets.SHEET_TITLE }}
+          PUBLISH_SITE: "true"
+        run: python fantasy_update.py ${{ steps.setup.outputs.flags }}
+
+      - name: Keep backups of edited sheets
+        if: always() && steps.when.outputs.go == 'true' && hashFiles('data/backups/*.xlsx') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sheet-backups-${{ github.run_id }}
+          path: data/backups/
+          retention-days: 90
+
+  # A push made by this workflow doesn't start other workflows, so deploy the site from here.
+  deploy:
+    needs: update
+    if: needs.update.outputs.ran == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

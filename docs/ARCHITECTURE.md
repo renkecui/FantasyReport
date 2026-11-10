@@ -256,6 +256,7 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
 | Google Sheets API v4 | Edit-warning protection on each tab (optional) | Same OAuth login |
 | GitHub (git push) + GitHub Actions + Pages | The run pushes `web/league.json` to `main`; the **Deploy website** workflow publishes `web/` | Your existing git login; the workflow uses GitHub's built-in Pages token |
 | macOS launchd / osascript | Daily schedule / notifications | Local |
+| GitHub Actions (optional, instead of launchd) | **Update league data** workflow: the same run at 8 AM / 5 PM New York time, then deploys the site | Repository secrets; `Config` reads them as environment variables when there is no `config.json` |
 
 ## Design decisions
 

@@ -175,6 +175,43 @@ Good to know:
   and set the meta tag in `data/site/index.html` (not `web/`) to `http://127.0.0.1:8787` while previewing.
 - Worker tests: `cd worker && npm test`.
 
+## 9. (Optional) Run on GitHub instead of the Mac
+
+The **Update league data** workflow (`.github/workflows/update.yml`) does the same run on GitHub's
+servers at 8:00 AM and 5:00 PM New York time, so the Mac can be off. It reads the settings from
+repository secrets instead of `config.json`, updates the Google Sheet, commits `web/league.json`
+and deploys the site.
+
+1. On GitHub, open the repository's **Settings → Secrets and variables → Actions** and add these
+   **repository secrets** (copy the values from `config.json` and `data/` on the Mac):
+
+   | Secret | Value |
+   |---|---|
+   | `LEAGUE_ID` | `league_id` |
+   | `SEASON_YEAR` | `season_year` |
+   | `ESPN_S2` | `espn_s2` |
+   | `ESPN_SWID` | `swid` (with the braces) |
+   | `GOOGLE_TOKEN_JSON` | the whole contents of `data/token.json` (`pbcopy < data/token.json` copies it) |
+   | `GOOGLE_SHEET_ID` | the contents of `data/sheet_id.txt` |
+   | `MY_TEAM_NAME`, `SHEET_TITLE` | optional, same as in `config.json` |
+
+   Without `GOOGLE_TOKEN_JSON` the workflow updates only the website.
+2. Open the **Actions** tab, pick **Update league data**, and click **Run workflow**. Check that it
+   finishes green and the site and sheet show the new data.
+3. Stop the Mac's schedule so both don't update: `scripts/uninstall.sh`.
+
+Good to know:
+- A failed run emails you (GitHub's default for scheduled workflows), instead of a Mac notification.
+- Runs can start a few minutes late. GitHub pauses scheduled workflows after 60 days without
+  any commits (e.g. the off-season); turn it back on in the Actions tab.
+- When the ESPN cookies expire, or after `python3 fantasy_update.py --login` on the Mac, update
+  `ESPN_S2` / `ESPN_SWID` or `GOOGLE_TOKEN_JSON` in the secrets.
+- Edits people made to the sheet are still backed up before each update; download them from the
+  run's **Artifacts** (kept 90 days) instead of `data/backups/`.
+- If the sheet is deleted, a run makes a new one but can't save its ID: put the new ID from the
+  run's log into `GOOGLE_SHEET_ID`.
+- To go back to the Mac, run `scripts/install.sh` and disable the workflow in the Actions tab.
+
 ---
 
 ## Everyday use

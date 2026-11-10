@@ -23,7 +23,7 @@ echo "Setting up packages in .venv/ (using $SYS_PY)..."
 "$SYS_PY" -m venv "$DIR/.venv"
 PY="$DIR/.venv/bin/python3"
 "$PY" -m pip install --quiet --upgrade pip
-"$PY" -m pip install --quiet --upgrade espn-api openpyxl google-api-python-client google-auth-oauthlib
+"$PY" -m pip install --quiet --upgrade -r "$DIR/requirements.txt"
 
 echo "Logging in to Google and running once..."
 "$PY" fantasy_update.py --login

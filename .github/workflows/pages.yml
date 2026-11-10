@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths: ["web/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
+  workflow_call:  # used by update.yml after it commits new data
 
 permissions:
   contents: read
@@ -26,6 +27,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main  # the latest main, including a data commit made earlier in the same run
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
