@@ -111,10 +111,10 @@ class SitePublisherTest(unittest.TestCase):
         self.assertEqual(self.remote_json()["points"], 140)
 
     def test_pages_url(self):
-        self.git(self.repo, "remote", "set-url", "origin", "https://github.com/RenkeCui/NBAFantasy26.git")
-        self.assertEqual(self.pub.pages_url(), "https://renkecui.github.io/NBAFantasy26/")
-        self.git(self.repo, "remote", "set-url", "origin", "git@github.com:renkecui/NBAFantasy26.git")
-        self.assertEqual(self.pub.pages_url(), "https://renkecui.github.io/NBAFantasy26/")
+        self.git(self.repo, "remote", "set-url", "origin", "https://github.com/RenkeCui/FantasyReport.git")
+        self.assertEqual(self.pub.pages_url(), "https://renkecui.github.io/FantasyReport/")
+        self.git(self.repo, "remote", "set-url", "origin", "git@github.com:renkecui/FantasyReport.git")
+        self.assertEqual(self.pub.pages_url(), "https://renkecui.github.io/FantasyReport/")
         self.git(self.repo, "remote", "set-url", "origin", self.remote)
         self.assertIsNone(self.pub.pages_url())
 

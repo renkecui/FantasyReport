@@ -75,7 +75,7 @@ class SyncPipeline:
         publisher = GoogleSheetPublisher(self.paths, self.auth, self.retry)
         result = publisher.publish(self.paths.local_xlsx, config.sheet_title, interactive=self.options.login)
         if result.warnings:
-            self.notifier.notify("NBAFantasy26 sync", result.warnings[-1])
+            self.notifier.notify("Fantasy Report sync", result.warnings[-1])
         return f"{'Created' if result.created else 'Updated'} Google Sheet: {result.url}"
 
     def publish_site(self, site_dir):

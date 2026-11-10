@@ -1,4 +1,4 @@
-# NBAFantasy26
+# Fantasy Report
 
 A daily sync from an ESPN fantasy basketball league to a shared Google Sheet and a website.
 
@@ -61,8 +61,8 @@ It's a static site in `web/` on `main`: the daily run commits fresh data to
 ## Quick start
 
 ```bash
-git clone https://github.com/renkecui/NBAFantasy26.git
-cd NBAFantasy26
+git clone https://github.com/renkecui/FantasyReport.git
+cd FantasyReport
 cp config.example.json config.json   # add league ID, team name and ESPN cookies
 scripts/install.sh                   # needs credentials.json from Google Cloud first
 ```

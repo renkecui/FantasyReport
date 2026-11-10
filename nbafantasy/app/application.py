@@ -39,5 +39,5 @@ class Application(metaclass=Singleton):
 
     def fail(self, message):
         self.log.error(message)
-        self.notifier.notify("NBAFantasy26 sync failed", message)
+        self.notifier.notify("Fantasy Report sync failed", message)
         sys.exit(1)

@@ -31,7 +31,7 @@ Why this over a server app (Flask/FastAPI + hosting):
    Add `<meta name="robots" content="noindex">` so it stays out of search results.
 2. **Where the built site lives:** on `main` (changed from a `gh-pages` branch): `web/` plus the
    daily `web/league.json`, deployed by a GitHub Actions workflow and served at
-   `https://renkecui.github.io/NBAFantasy26/`. Daily data commits stay off `main`.
+   `https://renkecui.github.io/FantasyReport/`. Daily data commits stay off `main`.
    (Free GitHub Pages needs the repo to be public.)
 3. **Keep the Google Sheet?** Recommended: yes, keep both until the site has proven itself.
 

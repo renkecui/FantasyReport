@@ -1,4 +1,4 @@
-"""NBAFantasy26: pull ESPN fantasy basketball league data and publish it to a Google Sheet and a website.
+"""Fantasy Report: pull ESPN fantasy basketball league data and publish it to a Google Sheet and a website.
 
 One class per file; each subpackage groups one part of a run:
 

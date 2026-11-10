@@ -8,7 +8,7 @@ class Config:
     league_id: int
     season_year: int
     my_team_name: str = ""
-    sheet_title: str = "The Boys League Stats"
+    sheet_title: str = "The Boys Fantasy Report"
     espn_s2: str = ""
     swid: str = ""
     publish_site: bool = False

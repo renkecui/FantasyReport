@@ -7,7 +7,7 @@ workers_dev = true
 preview_urls = false
 
 [vars]
-LEAGUE_JSON_URL = "https://renkecui.github.io/NBAFantasy26/league.json"
+LEAGUE_JSON_URL = "https://renkecui.github.io/FantasyReport/league.json"
 ALLOWED_ORIGINS = "https://renkecui.github.io"
 # "Remember me" logins last until this date (end of the season).
 SESSION_END = "2027-07-01"

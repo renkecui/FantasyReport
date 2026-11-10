@@ -1,6 +1,6 @@
 # Setup
 
-How to get NBAFantasy26 running on your Mac. It takes about 15 minutes, once.
+How to get Fantasy Report running on your Mac. It takes about 15 minutes, once.
 
 Back to the [README](../README.md) · See also [Architecture](ARCHITECTURE.md)
 
@@ -13,8 +13,8 @@ Back to the [README](../README.md) · See also [Architecture](ARCHITECTURE.md)
 ## 1. Get the code
 
 ```bash
-git clone https://github.com/renkecui/NBAFantasy26.git
-cd NBAFantasy26
+git clone https://github.com/renkecui/FantasyReport.git
+cd FantasyReport
 ```
 
 The other commands in this guide are run from this folder.
@@ -22,12 +22,12 @@ The other commands in this guide are run from this folder.
 ## 2. Google: let the app create and update the sheet
 
 1. Go to https://console.cloud.google.com and sign in.
-2. Create a new project, for example `NBAFantasy26`.
+2. Create a new project, for example `FantasyReport`.
 3. Under **APIs & Services → Library**, enable both:
    - **Google Drive API**: uploads and updates the sheet (required)
    - **Google Sheets API**: adds the "this sheet is auto-updated" warning to each tab (optional; without it the log shows a harmless 403)
 4. Under **APIs & Services → OAuth consent screen** (may be called **Google Auth Platform**):
-   - User type **External**, app name `NBAFantasy26`, your email for the contact fields.
+   - User type **External**, app name `Fantasy Report`, your email for the contact fields.
    - Under **Audience**, add your Gmail as a **test user**.
    - Click **Publish app** so the status says **In production**. While it says "Testing",
      Google makes you sign in again every 7 days. No Google review is needed; the app only
@@ -71,7 +71,7 @@ scripts/install.sh
 This:
 1. Creates a private `.venv/` and installs the Python packages into it (nothing system-wide).
 2. Opens your browser to sign in to Google. Pick your account and click **Allow**.
-   If you see "Google hasn't verified this app", click **Advanced → Go to NBAFantasy26**.
+   If you see "Google hasn't verified this app", click **Advanced → Go to Fantasy Report**.
 3. Runs once and prints the link to your new Google Sheet.
 4. Schedules a daily 8:00 AM run with launchd. If the Mac is asleep, it runs when it wakes.
 5. Turns on the pre-commit hook that blocks secrets from being committed.
@@ -115,7 +115,7 @@ Every run builds the website in `data/site/`. To put it online with GitHub Pages
    ```
 4. Add `"publish_site": true` to `config.json` so the daily run updates it too.
 
-After a minute or two the site is at `https://<your-github-name>.github.io/NBAFantasy26/`
+After a minute or two the site is at `https://<your-github-name>.github.io/FantasyReport/`
 (the log prints the link).
 
 > [!NOTE]

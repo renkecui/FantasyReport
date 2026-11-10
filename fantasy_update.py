@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NBAFantasy26: pull ESPN fantasy basketball league data and update a Google Sheet.
+Fantasy Report: pull ESPN fantasy basketball league data and update a Google Sheet.
 
   python3 fantasy_update.py           # normal run (what the 8am schedule does)
   python3 fantasy_update.py --login   # sign in to Google again (first time, or if the login expired)
