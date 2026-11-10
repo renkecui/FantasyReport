@@ -66,13 +66,13 @@ jobs:
           echo "go=true" >> "$GITHUB_OUTPUT"
 
       - if: steps.when.outputs.go == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
 
       - if: steps.when.outputs.go == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -118,7 +118,7 @@ jobs:
 
       - name: Keep backups of edited sheets
         if: always() && steps.when.outputs.go == 'true' && hashFiles('data/backups/*.xlsx') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sheet-backups-${{ github.run_id }}
           path: data/backups/
