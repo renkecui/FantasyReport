@@ -23,9 +23,16 @@ The same three tables as pages: **Season** (standings, season stats and league r
 totals or per-week averages and to include or leave out the week in progress), **Weekly**
 (matchup cards and each week's category breakdown) and **Teams** (each roster, category ranks and
 matchup history). Columns sort with a click, cells are colored by rank, and a Stats/Ranks switch
-shows values or ranks. Every team has its own color theme. League members can log in with their team
-and the league password, then pick their team's theme (one per team), through a small Cloudflare Worker
-in `worker/` ([setup](docs/SETUP.md#8-optional-turn-on-login-and-team-themes-cloudflare-worker)).
+shows values or ranks. Every team has its own color theme.
+
+Visitors see a login screen first: the username is their team name (any capitalization) and the
+password is the shared league password. "Remember me" (on by default) keeps them logged in until
+the end of the season. Once logged in, the site highlights their team, and they can pick their
+team's color theme from a list (a color another team has can't be picked). Login and themes run on
+a small Cloudflare Worker in `worker/` ([setup](docs/SETUP.md#8-optional-turn-on-login-and-team-themes-cloudflare-worker)).
+The login screen keeps casual visitors out of the pages, but `league.json` itself is still a public
+file, so it isn't a way to hide the data.
+
 It's a static site in `web/` on `main`: the daily run commits fresh data to
 `web/league.json` and a GitHub Actions workflow deploys `web/` to GitHub Pages. Setup: [docs/SETUP.md](docs/SETUP.md#7-optional-publish-the-website).
 
@@ -87,6 +94,7 @@ scripts/uninstall.sh                 # stop the daily run
 fantasy_update.py     entry point
 nbafantasy/           the code: one class per file, grouped by job (app/, espn/, stats/, workbook/, website/, ...)
 web/                  the website: index.html, style.css and js/ (one class per file)
+worker/               Cloudflare Worker for login and team themes (npm test, npm run dev, wrangler deploy)
 tests/                one unit-test file per class, and a made-up sample league
 scripts/              install.sh, uninstall.sh
 docs/                 SETUP.md, ARCHITECTURE.md, WEBSITE_PLAN.md, TODO.md
