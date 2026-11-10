@@ -24,6 +24,11 @@ export class League {
 
   get title() { return this.data.title; }
   get teamNames() { return this.data.teams.map(t => t.name); }
+  /** Team names in draft order (first-round picks); ESPN order before the draft or in older files. */
+  get draftOrder() {
+    const order = this.data.draft_order || [];
+    return order.length === this.teamNames.length ? order : this.teamNames;
+  }
   get categories() { return this.data.categories; }
   get season() { return this.data.season; }
   get weeks() { return this.data.weeks; }

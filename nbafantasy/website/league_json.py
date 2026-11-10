@@ -35,6 +35,7 @@ class LeagueJson:
             "lower_is_better": sorted(Categories.LOWER_IS_BETTER),
             "player_stats": list(Categories.PLAYER_STATS),
             "teams": [{"name": t} for t in teams],  # colors come from the website's themes
+            "draft_order": list(data.draft_order),  # first-round pick order; [] before the draft
             "season": self._in_order(self.stats.season, teams),
             "season_completed": self._in_order(self.stats.season_completed, teams),
             "weeks": [{"number": wk.number, "final": wk.final,

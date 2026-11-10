@@ -74,7 +74,16 @@ class EspnClient:
         rosters = {names[t.team_id]: self._roster(names[t.team_id], t) for t in league.teams}
         order = [names[t.team_id] for t in sorted(league.teams, key=lambda t: t.team_id)]
         return LeagueData(teams=order, weeks=weeks, rosters=rosters, my_team=self.config.my_team_name,
-                          season_year=self.year)
+                          season_year=self.year, draft_order=self.draft_order(league, names))
+
+    @staticmethod
+    def draft_order(league, names):
+        """Team names in first-round pick order, or [] if the league hasn't drafted."""
+        first = sorted((p for p in getattr(league, "draft", None) or []
+                        if p.round_num == 1 and p.team is not None and p.round_pick is not None),
+                       key=lambda p: p.round_pick)
+        order = [names.get(p.team.team_id) for p in first]
+        return [t for t in order if t] if len(set(order)) == len(order) else []
 
     def _week(self, league, names, mp, current):
         winners = {}

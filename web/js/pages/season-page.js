@@ -18,7 +18,12 @@ export class SeasonPage extends Page {
     return !this.toggleableWeek || this.prefs.currentWeek !== "exclude";
   }
 
-  rows() { return this.league.seasonRows(this.includeCurrentWeek); }
+  /** The season rows in draft order, which the Team header goes back to. */
+  rows() {
+    const order = this.league.draftOrder;
+    return [...this.league.seasonRows(this.includeCurrentWeek)]
+      .sort((a, b) => order.indexOf(a.team) - order.indexOf(b.team));
+  }
 
   /** Per-week averages need a league.json that has them; otherwise totals are shown. */
   get perWeek() {
@@ -35,7 +40,7 @@ export class SeasonPage extends Page {
     const avgs = rows.map(r => view(r).avg_rank);
     const perWeek = this.perWeek;
     return [
-      { key: "team", label: "Team", cls: "name", dir: "asc", value: r => r.team.toLowerCase(), cell: r => Widgets.team(r.team) },
+      { key: "team", label: "Team", cls: "name", resetsSort: true, title: "Draft order", cell: r => Widgets.team(r.team) },
       { key: "record", label: "Record", group: "Record", cls: "strong", title: "Matchup W-L-T (finished weeks)",
         value: League.standing, cell: r => r.record },
       { key: "cw", label: "Cat W", group: "Record", value: r => r.cat_wins },

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List
 
 from .team_roster import TeamRoster
@@ -13,6 +13,7 @@ class LeagueData:
     rosters: Dict[str, TeamRoster]        # every team's current roster, by team name
     my_team: str = ""
     season_year: int = 0                  # e.g. 2027 for the 2026-27 season
+    draft_order: List[str] = field(default_factory=list)  # first-round pick order; empty before the draft
 
     def teams_mine_first(self):
         """Team names with my_team (config.json my_team_name) first, for the Google Sheet."""
