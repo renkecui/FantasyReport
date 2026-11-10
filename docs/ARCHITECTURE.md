@@ -1,37 +1,31 @@
 # Architecture
 
+How the project fits together. Back to the [README](../README.md) · See also [Setup](SETUP.md)
+
+## Overview
+
+**The scheduled update** (twice a day on GitHub Actions, or `python3 fantasy_update.py` by hand):
+
 ```mermaid
-flowchart TD
-    S["GitHub Actions · update.yml<br/>8:00 AM + 5:00 PM New York<br/>or python3 fantasy_update.py"] --> E["fantasy_update.py<br/>switch to .venv if present, Application().main()"]
-    E --> P["Paths.prepare()<br/>create data/, move old files"]
-    P --> K{"RunLock<br/>another run going?"}
-    K -- yes --> X["Stop: SyncError"]
-    K -- no --> C["EspnClient.fetch()<br/>matchups + every roster"]
-    C -- "LeagueData" --> V{"LeagueValidator<br/>data complete?"}
-    V -- no --> X
-    V -- yes --> W["WorkbookBuilder<br/>styled .xlsx"]
-    W --> L[("data/The_Boys_League_Stats.xlsx")]
-    V -- yes --> SE["LeagueJson + SiteBuilder<br/>web/ + league.json"]
-    SE --> SD[("data/site/")]
-    SD --> SP{"publish_site<br/>or --site-only?"}
-    SP -- yes --> GP["SitePublisher<br/>commit web/league.json to main → Actions deploys Pages"]
-    SP -- no --> D
-    GP --> D
-    W --> G{"--excel?"}
-    G -- yes --> D["Done: log result"]
-    G -- no --> CK{"GoogleSheetPublisher<br/>check live sheet"}
-    CK -- "edited since last sync" --> B[("data/backups/")]
-    B --> U
-    CK -- "unchanged" --> U["Upload .xlsx<br/>replace sheet contents"]
-    CK -- "deleted / trashed" --> N["Create a new sheet<br/>save new ID"]
-    N --> PR
-    U --> PR["Add edit warning to tabs<br/>(Sheets API, best effort)"]
-    PR --> ST[("data/sync_state.json")]
-    ST --> D
-    X --> M["Log error<br/>exit 1 → GitHub emails you, sheet untouched"]
+flowchart LR
+    A["update.yml<br/>8 AM + 5 PM ET"] --> B["EspnClient<br/>fetch league"]
+    B --> C{"LeagueValidator<br/>complete?"}
+    C -- no --> X["Stop<br/>nothing changes"]
+    C -- yes --> D["WorkbookBuilder<br/>.xlsx"]
+    C -- yes --> E["LeagueJson<br/>league.json"]
+    D --> F["GoogleSheetPublisher<br/>Google Sheet"]
+    E --> G["SitePublisher + pages.yml<br/>GitHub Pages"]
 ```
 
-Back to the [README](../README.md) · See also [Setup](SETUP.md)
+**The website** (static files on GitHub Pages; login and themes on a Cloudflare Worker):
+
+```mermaid
+flowchart LR
+    U["Browser<br/>web/js"] -- "page + league.json" --> P["GitHub Pages"]
+    U -- "login, themes" --> W["Cloudflare Worker<br/>worker/"]
+    W -- "team names" --> P
+    W --> K[("Workers KV<br/>theme picks, rate limits")]
+```
 
 ## How a run works
 
@@ -164,12 +158,12 @@ deliberately *not* singletons, so tests can build them with different values.
 | `state/team-themes.js` | `TeamThemes` (singleton) | Each team's color theme, from the Worker or, without one, the defaults |
 | `components/widgets.js` | `Widgets` | Shared pieces: team name with color dot, result badges, the switches |
 | `components/sortable-table.js` | `SortableTable` | A table whose columns sort on click; remembers each table's sort |
-| `components/account-menu.js` | `AccountMenu` | The header's "Log in" button, or your team with "Team theme…" and "Log out" |
-| `components/login-gate.js` | `LoginGate` | The login screen shown instead of the site until someone logs in (username = team name, any case; league password; Remember me) |
+| `components/account-menu.js` | `AccountMenu` | The header's menu for the logged-in team: "Team theme…" and "Log out" |
+| `components/login-gate.js` | `LoginGate` | The login screen shown until someone logs in (username = team name, any case; league password) |
 | `components/theme-dialog.js` | `ThemeDialog` | Pick a free theme |
 | `pages/page.js` → `season-page.js`, `weekly-page.js`, `team-page.js` | `Page` → `SeasonPage`, `WeeklyPage`, `TeamPage` | One class per page; the base class builds the category columns |
 | `router.js` | `Router` | Maps `#/season`, `#/weekly/<n>`, `#/team/<name>` to a page |
-| `app.js` | `App` (singleton) | Loads the data, draws the header, starts the router |
+| `app.js` | `App` (singleton) | Loads the data, then shows the login screen or the current page |
 | `main.js` | (none) | Entry point: `App.instance().start()` |
 
 The JavaScript singletons are created with `X.instance()`; calling `new X()` a second time throws.
@@ -222,20 +216,21 @@ at most 31 characters, and unique.
 
 ## Website
 
-`league.json` (schema version 2) holds `teams` (names, in ESPN order; no "my team": the website
-gets that from whoever is logged in), `season` (record, category record,
-stats, league ranks, average rank, weeks played, and `per_week` averages with their own league
-ranks), `season_completed` (the same, from finished weeks only), `weeks` (each team's matchup row with stats, weekly ranks,
-average and overall rank) and `rosters` (players in lineup order with per-game averages and
-FG%/FT% as made ÷ attempted). It is built from an allow-list of fields, so nothing from
-`config.json` can reach it.
+`league.json` (schema version 2) holds:
 
-`web/js/` loads it and renders three hash-routed pages: `#/season`, `#/weekly/<n>` and
-`#/team/<name>`. Every table sorts by any column; category cells are tinted by rank (green = 1st,
-red = last) and a Stats/Ranks switch shows values or ranks. The Season page also has a
-Total/Per week switch (season sums, or `per_week` averages and ranks, which are fair to teams
-that had a bye) and, while a week is in progress, an Include/Exclude switch that shows `season` or
-`season_completed`. Every switch is remembered per viewer in `localStorage`. The page uses no libraries or build step; the browser loads the ES modules directly.
+- `teams`: names in ESPN order (no "my team": the site uses whoever is logged in)
+- `season`: record, category record, stats, league ranks, average rank, weeks played, and
+  `per_week` averages with their own ranks; `season_completed` is the same from finished weeks only
+- `weeks`: each team's matchup row with stats, weekly ranks, average and overall rank
+- `rosters`: players in lineup order with per-game averages (FG%/FT% as made ÷ attempted)
+
+It is built from an allow-list of fields, so nothing from `config.json` can reach it.
+
+`web/js/` renders three hash-routed pages (`#/season`, `#/weekly/<n>`, `#/team/<name>`) with no
+libraries or build step. Every table sorts by any column, category cells are tinted by rank
+(green = 1st, red = last), and a Stats/Ranks switch shows values or ranks. The Season page also
+switches between totals and per-week averages (fair to teams that had a bye) and, while a week is
+in progress, between including and excluding it. Switches are remembered in `localStorage`.
 
 `LeagueStats` mirrors the workbook formulas (and also builds `season_completed`, which leaves the
 week in progress out of everything): weekly rank = 1 + teams strictly better that week
