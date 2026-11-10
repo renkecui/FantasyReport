@@ -53,11 +53,11 @@ export class TeamPage extends Page {
       }, el("span", { class: "cat" }, c), el("span", { class: "rk" }, "#" + r.ranks[c]))));
   }
 
-  /** Roster: FG%, FT% and TO tinted best→worst within the team, like the sheet. */
+  /** Roster: every stat but MIN tinted best→worst within the team (TO: fewest is best). */
   rosterTable() {
     const players = this.players;
     if (!players.length) return el("p", { class: "state" }, "No roster data.");
-    const stat = (key, group, { pct = false, tint = false, lowerBetter = false } = {}) => ({
+    const stat = (key, group, { pct = false, tint = true, lowerBetter = false } = {}) => ({
       key, label: key, group, dir: lowerBetter ? "asc" : "desc",
       value: p => p.stats[key],
       cell: p => (pct ? Format.pct(p.stats[key]) : Format.one(p.stats[key])),
@@ -65,22 +65,27 @@ export class TeamPage extends Page {
     });
     const slotGroup = s => (s === "IR" ? 2 : s === "Bench" ? 1 : 0);
     const columns = [
-      { key: "slot", label: "Slot", cls: "strong", dir: "asc", value: p => players.indexOf(p), cell: p => p.slot },
-      { key: "name", label: "Player", cls: "name", group: "Player", dir: "asc", value: p => p.name.toLowerCase(),
+      { key: "slot", label: "Slot", cls: "slot", resetsSort: true, title: "Back to slot order",
+        cell: p => p.slot },
+      { key: "name", label: "Player", cls: "name", group: "Player", sortable: false,
         cell: p => el("span", {}, p.name, p.status ? el("span", { class: "badge status" }, p.status) : null) },
-      { key: "nba", label: "NBA", group: "Player", dir: "asc", value: p => p.nba_team, cell: p => p.nba_team },
-      { key: "pos", label: "Pos", group: "Player", dir: "asc", value: p => p.positions, cell: p => p.positions || "–" },
-      stat("MIN", "Shooting"), stat("FGM", "Shooting"), stat("FGA", "Shooting"),
-      stat("FG%", "Shooting", { pct: true, tint: true }),
+      { key: "nba", label: "Team", cls: "nba-team", group: "Player", sortable: false, value: p => p.nba_team },
+      { key: "pos", label: "Pos", group: "Player", sortable: false, cell: p => p.positions || "–" },
+      stat("MIN", "Shooting", { tint: false }), stat("FGM", "Shooting"), stat("FGA", "Shooting"),
+      stat("FG%", "Shooting", { pct: true }),
       stat("FTM", "Shooting"), stat("FTA", "Shooting"),
-      stat("FT%", "Shooting", { pct: true, tint: true }),
+      stat("FT%", "Shooting", { pct: true }),
       stat("3PM", "Per game"), stat("REB", "Per game"), stat("AST", "Per game"),
       stat("STL", "Per game"), stat("BLK", "Per game"),
-      stat("TO", "Per game", { lowerBetter: true, tint: true }), stat("PTS", "Per game"),
+      stat("TO", "Per game", { lowerBetter: true }), stat("PTS", "Per game"),
     ];
+    const firstIR = players.findIndex(p => p.slot === "IR");
     return new SortableTable(columns, {
-      id: "roster", rows: players, defaultSort: null,
-      rowClass: (p, i, sorted) => (!sorted && i > 0 && slotGroup(p.slot) !== slotGroup(players[i - 1].slot) ? "divider" : null),
+      id: "roster", rows: players, defaultSort: null, stickyName: true,
+      pinned: p => p.slot === "IR",  // IR players stay at the bottom, whatever the sort
+      rowClass: (p, i, sorted) => (sorted
+        ? (i === firstIR && i > 0 ? "divider" : null)
+        : (i > 0 && slotGroup(p.slot) !== slotGroup(players[i - 1].slot) ? "divider" : null)),
     }).render();
   }
 
@@ -105,7 +110,7 @@ export class TeamPage extends Page {
       this.picker(),
       el("div", { class: "team-theme", style: Widgets.teamStyle(this.name) },
         Page.head(Widgets.team(this.name, { link: false }),
-          "Current roster with season per-game averages. FG%, FT% and TO colored best (green) to worst (red) on this team."),
+          "Current roster with season per-game averages. Stats colored best (green) to worst (red) on this team; fewest TO is best."),
         this.summary(),
         this.rankChips(),
         this.rosterTable(),

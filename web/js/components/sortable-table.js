@@ -5,9 +5,12 @@ const el = Dom.el;
 
 /**
  * columns: [{ key, label, title, group, cls, value(row), cell(row), cellTitle(row),
- *             tint(row) -> 0..1 | null, dir: "asc" | "desc" (first-click direction), sortable }]
+ *             tint(row) -> 0..1 | null, dir: "asc" | "desc" (first-click direction), sortable,
+ *             resetsSort: true to make the header a button that restores the original row order }]
  * options: { id, rows, defaultSort: { key, dir } | null, rowClass(row, originalIndex, isSorted),
- *            rowStyle(row) -> { cssProperty: value } }
+ *            rowStyle(row) -> { cssProperty: value }, pinned(row) -> true to keep the row at the
+ *            bottom, in its original order, whatever the sort, stickyName: true to freeze the
+ *            "name" column while scrolling sideways instead of the first column }
  * Each table id remembers its sort while the page is open.
  */
 export class SortableTable {
@@ -18,7 +21,7 @@ export class SortableTable {
   constructor(columns, options) {
     this.columns = columns;
     this.options = options;
-    this.card = el("div", { class: "table-card" });
+    this.card = el("div", { class: options.stickyName ? "table-card sticky-name" : "table-card" });
     if (!SortableTable.#sorts.has(options.id)) SortableTable.#sorts.set(options.id, options.defaultSort || null);
   }
 
@@ -36,17 +39,20 @@ export class SortableTable {
     const col = s && this.columns.find(c => c.key === s.key);
     if (!col) return rows;
     const sign = s.dir === "asc" ? 1 : -1;
-    return rows.sort(([a, ia], [b, ib]) => {
+    const pinned = this.options.pinned || (() => false);
+    const sorted = rows.filter(([r]) => !pinned(r)).sort(([a, ia], [b, ib]) => {
       const va = col.value(a), vb = col.value(b);
       if (va < vb) return -sign;
       if (va > vb) return sign;
       return ia - ib;
     });
+    return sorted.concat(rows.filter(([r]) => pinned(r)));
   }
 
   #onSort(col) {
     const s = this.sort;
-    this.sort = s && s.key === col.key
+    if (col.resetsSort) this.sort = null;
+    else this.sort = s && s.key === col.key
       ? { key: col.key, dir: s.dir === "asc" ? "desc" : "asc" }
       : { key: col.key, dir: col.dir || "desc" };
     this.#draw();
@@ -83,8 +89,8 @@ export class SortableTable {
         return el("th", {
           scope: "col", class: classes(c.cls, starts.has(i) && "group-start"), title: c.title || null,
           "aria-sort": sorted ? (s.dir === "asc" ? "ascending" : "descending") : null,
-        }, c.sortable === false ? c.label
-          : el("button", { class: "sort", type: "button", "data-key": c.key, onclick: () => this.#onSort(c) }, c.label));
+        }, c.sortable === false && !c.resetsSort ? c.label
+          : el("button", { class: c.resetsSort ? "sort reset" : "sort", type: "button", "data-key": c.key, onclick: () => this.#onSort(c) }, c.label));
       })));
 
     const body = el("tbody", {}, this.#sortedRows().map(([r, i]) => el("tr", {
