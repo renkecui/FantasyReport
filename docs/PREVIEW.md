@@ -13,6 +13,10 @@ From the project folder:
 The site opens at http://localhost:8765. Log in with your **team name** and the password
 **`local`** (from `worker/.dev.vars`).
 
+> **Tip:** open the preview in a private (incognito) window. Browsers cache the site's files, so a
+> normal window can keep running old code (for example, login fails with "Couldn't reach the
+> server"). A private window always loads fresh files.
+
 ## Make changes
 
 1. Edit files in `web/` (HTML, CSS, JavaScript). There's no build step.
