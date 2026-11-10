@@ -37,7 +37,7 @@ class EspnClient:
         except Exception as e:
             if type(e).__name__ == "ESPNAccessDenied" or "HTTP 401" in str(e):
                 raise SyncError(f"ESPN refused the request ({e}). Your ESPN cookies probably expired; "
-                                f"get fresh ones (docs/SETUP.md step 3) and update ESPN_S2 / ESPN_SWID (or config.json).")
+                                f"get fresh ones (docs/SETUP.md step 3) and update the ESPN_S2 / SWID secrets (or config.json).")
             raise SyncError(f"Could not get ESPN data ({e}). Google Sheet left unchanged.")
 
     # ---------------------------------------------------------------- internals

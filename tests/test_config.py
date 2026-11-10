@@ -8,7 +8,7 @@ from nbafantasy.config.config import Config
 
 
 class ConfigTest(unittest.TestCase):
-    ENV = {"LEAGUE_ID": "123", "ESPN_S2": " s2 ", "ESPN_SWID": "{ABC}",
+    ENV = {"LEAGUE_ID": "123", "ESPN_S2": " s2 ", "SWID": "{ABC}",
            "MY_TEAM_NAME": "IRen ", "PUBLISH_SITE": "true"}
 
     def test_reads_config_json_when_it_exists(self):

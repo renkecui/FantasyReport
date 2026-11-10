@@ -100,7 +100,7 @@ instead of `config.json`.
    |---|---|---|
    | `LEAGUE_ID` | **Yes** | `league_id` |
    | `ESPN_S2` | **Yes** (private league) | `espn_s2` |
-   | `ESPN_SWID` (or `SWID`) | **Yes** (private league) | `swid` (with the braces) |
+   | `SWID` | **Yes** (private league) | `swid` (with the braces) |
    | `GOOGLE_TOKEN_JSON` | For the Google Sheet | the whole contents of `data/token.json` (`pbcopy < data/token.json` copies it on a Mac) |
    | `GOOGLE_SHEET_ID` | For the Google Sheet | the contents of `data/sheet_id.txt` |
    | `MY_TEAM_NAME` | No | puts that team's tab first in the sheet |
@@ -195,7 +195,7 @@ Every failure is in the run's log, and a failed scheduled run emails you.
 | `config.json not found and LEAGUE_ID not set` | Add the secrets (step 5). |
 | `GOOGLE_SHEET_ID secret is missing` | Add it from `data/sheet_id.txt` (step 5). |
 | `Google login missing or expired` | Run `python3 fantasy_update.py --login` on your computer, then copy the new `data/token.json` into `GOOGLE_TOKEN_JSON`. |
-| `ESPN refused the request` / `ESPNAccessDenied` | The ESPN cookies expired. Get fresh ones (step 3) and update `ESPN_S2` / `ESPN_SWID`. |
+| `ESPN refused the request` / `ESPNAccessDenied` | The ESPN cookies expired. Get fresh ones (step 3) and update the `ESPN_S2` / `SWID` secrets. |
 | `No matchups found` | Check `LEAGUE_ID` (the league may not have started its season yet). |
 | `team '…' not found` | Fix `MY_TEAM_NAME`; the log lists ESPN's team names. |
 | `ESPN data looks wrong` | Usually ESPN is mid-update. The next run normally works. |

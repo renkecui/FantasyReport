@@ -24,7 +24,7 @@ class Config:
         "my_team_name": "MY_TEAM_NAME",
         "sheet_title": "SHEET_TITLE",
         "espn_s2": "ESPN_S2",
-        "swid": "ESPN_SWID",
+        "swid": "SWID",
         "publish_site": "PUBLISH_SITE",
     }
 
