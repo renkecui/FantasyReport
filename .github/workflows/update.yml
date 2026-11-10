@@ -1,6 +1,6 @@
-# Fetches the league from ESPN at 8 AM and 5 PM New York time, on GitHub's servers (no Mac needed):
+# Fetches the league from ESPN at 8 AM and 5 PM New York time, on GitHub's servers:
 # updates the Google Sheet and commits web/league.json to main, then deploys the website.
-# Settings come from repository secrets; see docs/SETUP.md, "Run on GitHub instead of the Mac".
+# Settings come from repository secrets; see docs/SETUP.md step 5.
 name: Update league data
 
 on:
@@ -15,7 +15,7 @@ permissions:
   contents: write  # push the web/league.json commit
 
 concurrency:
-  group: league-update  # never two updates at once (replaces the Mac's run lock)
+  group: league-update  # never two updates at once
   cancel-in-progress: false
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
         run: |
           hour=$(TZ=America/New_York date +%H)
           if [ "$CONFIGURED" != "true" ]; then
-            echo "The LEAGUE_ID secret isn't set yet (docs/SETUP.md step 9)."
+            echo "The LEAGUE_ID secret isn't set yet (docs/SETUP.md step 5)."
             [ "$GITHUB_EVENT_NAME" = "schedule" ] && echo "go=false" >> "$GITHUB_OUTPUT" && exit 0
             echo "::error::Add the repository secrets first."; exit 1
           fi

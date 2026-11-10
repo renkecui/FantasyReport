@@ -1,4 +1,4 @@
-# Cloudflare Worker for the league website: login and team themes. Setup: docs/SETUP.md step 8.
+# Cloudflare Worker for the league website: login and team themes. Setup: docs/SETUP.md step 6.
 name = "nbafantasy-api"
 main = "src/index.js"
 compatibility_date = "2025-10-01"

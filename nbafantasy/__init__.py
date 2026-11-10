@@ -3,7 +3,7 @@
 One class per file; each subpackage groups one part of a run:
 
   app/            Application (the process), SyncPipeline (the steps of a run), RunOptions (CLI flags)
-  common/         Singleton, SyncError, Logger, Files, RetryPolicy, MacNotifier, RunLock
+  common/         Singleton, SyncError, Logger, Files, RetryPolicy, RunLock
   config/         Paths (where files live), Config (config.json)
   models/         Categories and the plain data passed between steps (LeagueData, Week, ...)
   espn/           EspnClient (ESPN -> LeagueData), LeagueValidator (refuses incomplete data)

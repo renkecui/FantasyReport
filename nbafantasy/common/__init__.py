@@ -1,7 +1,6 @@
-"""Shared building blocks: errors, logging, files, retries, notifications, the run lock."""
+"""Shared building blocks: errors, logging, files, retries, the run lock."""
 from .files import Files
 from .logger import Logger
-from .mac_notifier import MacNotifier
 from .retry_policy import RetryPolicy
 from .run_lock import RunLock
 from .singleton import Singleton

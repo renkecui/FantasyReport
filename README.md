@@ -3,14 +3,13 @@
 Daily reports for an ESPN fantasy basketball league (9-category head-to-head), as a shared Google
 Sheet and a members-only website.
 
-Twice a day, at 8:00 AM and 5:00 PM, a scheduled job on a Mac pulls matchups, category stats and rosters from
-ESPN, checks them, and then:
+Twice a day, at 8:00 AM and 5:00 PM New York time, a scheduled GitHub Actions workflow pulls
+matchups, category stats and rosters from ESPN, checks them, and then:
 
-- replaces the contents of one Google Sheet (same link every day, local Excel copy saved too), and
+- replaces the contents of one Google Sheet (same link every day), and
 - publishes the same data to a website on GitHub Pages.
 
-The same run can also happen on GitHub Actions instead, so the Mac doesn't need to be on
-([setup](docs/SETUP.md#9-optional-run-on-github-instead-of-the-mac)).
+It runs on GitHub's servers, so no computer needs to be on.
 
 | Sheet tab / web page | Shows |
 |---|---|
@@ -24,7 +23,7 @@ which its member can change. Login and themes run on a small Cloudflare Worker (
 login keeps casual visitors out, but `league.json` itself is a public file.
 
 **Safe by default:** ESPN data is validated before anything is replaced, a hand-edited sheet is
-backed up first, failures show a Mac notification and go to `data/update.log`, Google access is
+backed up first, a failed run emails you and its log is on GitHub, Google access is
 limited to files the app created, and a pre-commit hook blocks secrets from being committed.
 
 ## Quick start
@@ -33,15 +32,16 @@ limited to files the app created, and a pre-commit hook blocks secrets from bein
 git clone https://github.com/renkecui/FantasyReport.git
 cd FantasyReport
 cp config.example.json config.json   # league ID, team name, ESPN cookies
-scripts/install.sh                   # needs credentials.json from Google Cloud first
+scripts/setup.sh                     # packages + Google login; needs credentials.json from Google Cloud
 ```
 
-Full walkthrough (Google Cloud, ESPN cookies, website, Worker): **[docs/SETUP.md](docs/SETUP.md)**.
+Then add the settings as GitHub repository secrets so the scheduled workflow can run.
+Full walkthrough (Google Cloud, ESPN cookies, GitHub secrets, Worker): **[docs/SETUP.md](docs/SETUP.md)**.
 
 ## Usage
 
 ```bash
-python3 fantasy_update.py              # update now (what the 8:00 / 17:00 job runs)
+python3 fantasy_update.py              # update now from this computer (what the scheduled workflow runs)
 python3 fantasy_update.py --excel      # local files only (.xlsx + data/site), publish nothing
 python3 fantasy_update.py --site-only  # build and publish only the website
 python3 fantasy_update.py --no-site    # skip the website this run
@@ -49,7 +49,6 @@ python3 fantasy_update.py --login      # sign in to Google again
 python3 -m http.server -d data/site    # preview the website at http://localhost:8000
 python3 -m unittest discover -s tests -t .   # Python tests
 npm --prefix worker test               # Worker tests
-scripts/uninstall.sh                   # stop the daily run
 ```
 
 ## Layout
@@ -60,11 +59,12 @@ nbafantasy/         Python package, one class per file (app, espn, stats, workbo
 web/                the website: plain HTML/CSS and JS modules, one class per file, no build step
 worker/             Cloudflare Worker: login, session tokens, team themes (Workers KV)
 tests/              Python unit tests and a made-up sample league
-scripts/            install.sh / uninstall.sh (launchd job)
+scripts/            setup.sh (local setup + Google login), remove-mac-schedule.sh (old Mac schedule)
+.github/workflows/  update.yml (8 AM / 5 PM update), pages.yml (deploys the website)
 docs/               SETUP, ARCHITECTURE, TODO
 ```
 
 `config.json`, `credentials.json` and `data/` are private and git-ignored.
 
-Built with Python 3 (`espn-api`, `openpyxl`, Google Drive/Sheets APIs), macOS launchd, GitHub
-Actions + Pages, and Cloudflare Workers. Design details: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+Built with Python 3 (`espn-api`, `openpyxl`, Google Drive/Sheets APIs), GitHub Actions
+(schedule) + Pages, and Cloudflare Workers. Design details: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.

@@ -2,7 +2,7 @@
 """
 Fantasy Report: pull ESPN fantasy basketball league data and update a Google Sheet.
 
-  python3 fantasy_update.py           # normal run (what the 8am / 5pm schedule does)
+  python3 fantasy_update.py           # normal run (what the scheduled GitHub Actions run does)
   python3 fantasy_update.py --login   # sign in to Google again (first time, or if the login expired)
   python3 fantasy_update.py --excel   # local files only: .xlsx + website in data/site, publish nothing
   python3 fantasy_update.py --site-only  # build and publish only the website (GitHub Pages)
@@ -16,7 +16,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# install.sh puts the packages in .venv/. If this was started with another Python
+# scripts/setup.sh puts the packages in .venv/. If this was started with another Python
 # (e.g. a plain `python3 fantasy_update.py`), restart with the .venv one.
 # This must run before anything imports a third-party package.
 _VENV = os.path.join(HERE, ".venv")

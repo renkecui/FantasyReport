@@ -1,14 +1,12 @@
 import unittest
 
 from nbafantasy.common.logger import Logger
-from nbafantasy.common.mac_notifier import MacNotifier
 from nbafantasy.common.singleton import Singleton
 
 
 class SingletonTest(unittest.TestCase):
     def test_same_instance(self):
         self.assertIs(Logger(), Logger())
-        self.assertIs(MacNotifier(), MacNotifier())
 
     def test_reset_creates_a_new_instance(self):
         class Thing(metaclass=Singleton):

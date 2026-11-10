@@ -1,12 +1,14 @@
 # Setup
 
-How to get Fantasy Report running on your Mac. It takes about 15 minutes, once.
+How to get Fantasy Report running. The scheduled updates run on GitHub Actions; a computer is only
+needed once, to sign in to Google and copy a few values into GitHub. It takes about 20 minutes.
 
 Back to the [README](../README.md) · See also [Architecture](ARCHITECTURE.md)
 
 ## What you need
 
-- A Mac with **Python 3** (`python3 --version` should work in Terminal)
+- A computer with **Python 3** (`python3 --version` should work in a terminal), used once
+- A **GitHub account** with this repository (public, for free GitHub Pages and Actions)
 - A **Google account** (the sheet is created in its Drive)
 - Access to the **ESPN fantasy basketball league** in Chrome
 
@@ -56,81 +58,71 @@ A private league needs two cookies from your ESPN login.
    | `my_team_name` | Your team's name exactly as ESPN shows it (its tab goes first in the Google Sheet; the website highlights whoever is logged in) |
    | `sheet_title` | Name for the Google Sheet (also the website's title) |
    | `espn_s2`, `swid` | The two cookie values |
-   | `publish_site` | `true` to publish the website every run (step 7); leave `false` until then |
+   | `publish_site` | `true` to publish the website on manual runs too; leave `false` until step 5 |
 
 > [!WARNING]
 > Keep `config.json` private. Anyone with these cookies can use your ESPN account.
 > It is git-ignored and never committed.
 
-## 4. Install and schedule
+## 4. Local setup and Google login
 
 ```bash
-scripts/install.sh
+scripts/setup.sh
 ```
 
 This:
 1. Creates a private `.venv/` and installs the Python packages into it (nothing system-wide).
-2. Opens your browser to sign in to Google. Pick your account and click **Allow**.
+2. Turns on the pre-commit hook that blocks secrets from being committed.
+3. Opens your browser to sign in to Google. Pick your account and click **Allow**.
    If you see "Google hasn't verified this app", click **Advanced → Go to Fantasy Report**.
-3. Runs once and prints the link to your new Google Sheet.
-4. Schedules runs at 8:00 AM and 5:00 PM every day with launchd. If the Mac is asleep, it runs when it wakes.
-5. Turns on the pre-commit hook that blocks secrets from being committed.
+4. Runs once and prints the link to your new Google Sheet. The Google login is saved in
+   `data/token.json` and the sheet's ID in `data/sheet_id.txt`; the next step copies both to GitHub.
 
-## 5. Let the scheduled run read the folder (Full Disk Access)
+## 5. Schedule the updates on GitHub Actions
 
-macOS blocks background programs from reading protected folders such as Downloads and
-Documents, so the scheduled runs can fail even though running it by hand works.
+The **Update league data** workflow (`.github/workflows/update.yml`) runs the update on GitHub's
+servers at 8:00 AM and 5:00 PM New York time: it fetches ESPN, updates the Google Sheet, commits
+`web/league.json` to `main` and deploys the website. It reads its settings from repository secrets
+instead of `config.json`.
 
-1. Open **System Settings → Privacy & Security → Full Disk Access**.
-2. Click **+**, press **Cmd + Shift + G**, and paste the Python path that `scripts/install.sh`
-   printed at the end. Click **Open** and make sure the switch is on.
+1. **Website:** open the repository's **Settings → Pages**. Under **Build and deployment → Source**,
+   choose **GitHub Actions**.
+2. **Secrets:** open **Settings → Secrets and variables → Actions** and add these
+   **repository secrets** (the values are in `config.json` and `data/`):
 
-## 6. Check that it works
+   | Secret | Value |
+   |---|---|
+   | `LEAGUE_ID` | `league_id` |
+   | `SEASON_YEAR` | `season_year` |
+   | `ESPN_S2` | `espn_s2` |
+   | `ESPN_SWID` | `swid` (with the braces) |
+   | `GOOGLE_TOKEN_JSON` | the whole contents of `data/token.json` (`pbcopy < data/token.json` copies it on a Mac) |
+   | `GOOGLE_SHEET_ID` | the contents of `data/sheet_id.txt` |
+   | `MY_TEAM_NAME`, `SHEET_TITLE` | optional, same as in `config.json` |
 
-Run the scheduled job right now:
-
-```bash
-launchctl kickstart gui/$(id -u)/com.renke.fantasyupdate
-```
-
-Then look at the end of the log:
-
-```bash
-tail -3 data/update.log | cut -c1-200
-```
-
-The last line should end with `Updated Google Sheet: https://docs.google.com/...`.
-
-## 7. (Optional) Publish the website
-
-Every run builds the website in `data/site/`. To put it online with GitHub Pages:
-
-1. Make sure `git push` works from this folder (the run pushes with your normal GitHub login).
-2. On GitHub, open the repository's **Settings → Pages**. Under **Build and deployment → Source**,
-   choose **GitHub Actions**. Free GitHub accounts need the repository to be public for this.
-3. Publish once by hand. This commits today's `web/league.json` to `main` and pushes it, and the
-   **Deploy website** workflow (`.github/workflows/pages.yml`) puts `web/` online:
-   ```bash
-   python3 fantasy_update.py --site-only
-   ```
-4. Add `"publish_site": true` to `config.json` so the daily run updates it too.
-
-After a minute or two the site is at `https://<your-github-name>.github.io/FantasyReport/`
-(the log prints the link).
+   Without `GOOGLE_TOKEN_JSON` the workflow updates only the website. Until `LEAGUE_ID` is set,
+   scheduled runs skip quietly.
+3. **Check it:** open the **Actions** tab, pick **Update league data**, and click **Run workflow**.
+   It should finish green, and the log should end with `Updated Google Sheet: https://docs.google.com/...`.
+   After a minute or two the site is at `https://<your-github-name>.github.io/FantasyReport/`.
 
 > [!NOTE]
 > The website is public to anyone with the link. It shows team names, stats and rosters exactly as
 > ESPN has them (check that no team name is something private, such as an email address).
 > It never includes `config.json`, cookies or IDs, and asks search engines not to list it.
 
-Everything lives on `main`: the site's code in `web/`, and the data in `web/league.json`, which the
-run commits as "Update league data (date)" whenever the numbers change (a new timestamp alone isn't
-committed). The run makes that commit in its own checkout of `main` in `data/site-deploy/`, so it never
-touches the branch or files you're working on; deleting that folder is safe. Run `git pull` on `main`
-before starting new work to pick up the data commits. Any push that changes `web/` (including merging
-a working branch into `main`) redeploys the site.
+Good to know:
+- A failed run emails you (GitHub's default for scheduled workflows). Warnings, such as "the sheet was
+  edited and backed up", show on the run's summary page.
+- Runs can start a few minutes late. GitHub pauses scheduled workflows after 60 days without
+  any commits (e.g. the off-season); turn it back on in the Actions tab.
+- Edits people made to the sheet are backed up before each update; download them from the run's
+  **Artifacts** (kept 90 days).
+- Everything lives on `main`: the site's code in `web/` and the data in `web/league.json`, which each
+  run commits as "Update league data (date)" when the numbers change. Run `git pull` before new work.
+  Any push that changes `web/` redeploys the site.
 
-## 8. (Optional) Turn on login and team themes (Cloudflare Worker)
+## 6. (Optional) Turn on login and team themes (Cloudflare Worker)
 
 Every team already has its own color on the website. To let people **log in** (their team +
 the league password) and **pick their team's color theme**, run the small API in `worker/` on
@@ -175,87 +167,52 @@ Good to know:
   and set the meta tag in `data/site/index.html` (not `web/`) to `http://127.0.0.1:8787` while previewing.
 - Worker tests: `cd worker && npm test`.
 
-## 9. (Optional) Run on GitHub instead of the Mac
-
-The **Update league data** workflow (`.github/workflows/update.yml`) does the same run on GitHub's
-servers at 8:00 AM and 5:00 PM New York time, so the Mac can be off. It reads the settings from
-repository secrets instead of `config.json`, updates the Google Sheet, commits `web/league.json`
-and deploys the site.
-
-1. On GitHub, open the repository's **Settings → Secrets and variables → Actions** and add these
-   **repository secrets** (copy the values from `config.json` and `data/` on the Mac):
-
-   | Secret | Value |
-   |---|---|
-   | `LEAGUE_ID` | `league_id` |
-   | `SEASON_YEAR` | `season_year` |
-   | `ESPN_S2` | `espn_s2` |
-   | `ESPN_SWID` | `swid` (with the braces) |
-   | `GOOGLE_TOKEN_JSON` | the whole contents of `data/token.json` (`pbcopy < data/token.json` copies it) |
-   | `GOOGLE_SHEET_ID` | the contents of `data/sheet_id.txt` |
-   | `MY_TEAM_NAME`, `SHEET_TITLE` | optional, same as in `config.json` |
-
-   Without `GOOGLE_TOKEN_JSON` the workflow updates only the website.
-2. Open the **Actions** tab, pick **Update league data**, and click **Run workflow**. Check that it
-   finishes green and the site and sheet show the new data.
-3. Stop the Mac's schedule so both don't update: `scripts/uninstall.sh`.
-
-Good to know:
-- A failed run emails you (GitHub's default for scheduled workflows), instead of a Mac notification.
-- Runs can start a few minutes late. GitHub pauses scheduled workflows after 60 days without
-  any commits (e.g. the off-season); turn it back on in the Actions tab.
-- When the ESPN cookies expire, or after `python3 fantasy_update.py --login` on the Mac, update
-  `ESPN_S2` / `ESPN_SWID` or `GOOGLE_TOKEN_JSON` in the secrets.
-- Edits people made to the sheet are still backed up before each update; download them from the
-  run's **Artifacts** (kept 90 days) instead of `data/backups/`.
-- If the sheet is deleted, a run makes a new one but can't save its ID: put the new ID from the
-  run's log into `GOOGLE_SHEET_ID`.
-- To go back to the Mac, run `scripts/install.sh` and disable the workflow in the Actions tab.
-
 ---
 
 ## Everyday use
 
-| Task | Command |
+The scheduled runs need nothing from you. For a run by hand (needs step 4 on that computer):
+
+| Task | Where / command |
 |---|---|
-| Update now | `python3 fantasy_update.py` |
+| Update now | Actions tab → **Update league data** → **Run workflow** |
+| See what happened | Actions tab → the run's log |
+| Find the sheet link | The end of the run's log, or the `GOOGLE_SHEET_ID` secret |
+| Stop the scheduled updates | Actions tab → **Update league data** → **⋯ → Disable workflow** |
+| Update from this computer | `python3 fantasy_update.py` |
 | Local files only (`.xlsx` and `data/site/`), publish nothing | `python3 fantasy_update.py --excel` |
-| Update only the website | `python3 fantasy_update.py --site-only` |
-| Skip the website this run | `python3 fantasy_update.py --no-site` |
 | Preview the website | `python3 -m http.server -d data/site`, then open http://localhost:8000 |
-| Sign in to Google again | `python3 fantasy_update.py --login` |
-| See what happened | `tail data/update.log` |
-| Find the sheet link | Last line of `data/update.log`, or the ID in `data/sheet_id.txt` |
-| Stop the daily run | `scripts/uninstall.sh` |
-| Turn it back on | `scripts/install.sh` |
 
 Each update replaces the whole sheet. Don't keep notes in it. If someone does edit it, a copy
-is saved to `data/backups/` before it is replaced.
+is saved before it is replaced (in the run's Artifacts, or `data/backups/` for a local run).
 
 ## Troubleshooting
 
-Every failure shows a Mac notification and is written to `data/update.log`.
+Every failure is in the run's log, and a failed scheduled run emails you.
 
 | The log says | Fix |
 |---|---|
-| `Google login missing or expired` | `python3 fantasy_update.py --login` |
-| `ESPN refused the request` / `ESPNAccessDenied` | The ESPN cookies expired. Repeat step 3 with fresh cookies. |
-| `Operation not permitted` | Redo step 5 (Full Disk Access). |
-| `No matchups found` | Check `league_id` and `season_year` in `config.json`. |
-| `team '…' not found` | Fix `my_team_name` in `config.json`; the log lists ESPN's team names. |
+| `config.json not found and LEAGUE_ID ... not set` | Add the secrets (step 5). |
+| `GOOGLE_SHEET_ID secret is missing` | Add it from `data/sheet_id.txt` (step 5). |
+| `Google login missing or expired` | Run `python3 fantasy_update.py --login` on your computer, then copy the new `data/token.json` into `GOOGLE_TOKEN_JSON`. |
+| `ESPN refused the request` / `ESPNAccessDenied` | The ESPN cookies expired. Get fresh ones (step 3) and update `ESPN_S2` / `ESPN_SWID`. |
+| `No matchups found` | Check `LEAGUE_ID` and `SEASON_YEAR`. |
+| `team '…' not found` | Fix `MY_TEAM_NAME`; the log lists ESPN's team names. |
 | `ESPN data looks wrong` | Usually ESPN is mid-update. The next run normally works. |
 | `can no longer edit the Google Sheet` | Sharing changed. Make sure your account still owns or can edit it. |
-| `Another update is already running` | Wait a few minutes. A lock left by a crash clears itself; if not, delete `data/.update.lock`. |
 | `could not add the edit warning` (HTTP 403) | Enable the Google Sheets API (step 2). The data still updated. |
-| `A NEW Google Sheet link was created` | The old sheet was deleted or trashed. Share the new link with the league. |
-| `Website publish failed at 'git push'` | Check that `git push` works from this folder. The Google Sheet still updated. |
-| `Website publish failed` (other) | Delete `data/site-deploy/` and run `python3 fantasy_update.py --site-only`. |
+| `A NEW Google Sheet link was created` | The old sheet was deleted or trashed. Put the new ID from the log into `GOOGLE_SHEET_ID` and share the new link with the league. |
+| `Website publish failed` | Re-run the workflow; check that **Settings → Actions → General → Workflow permissions** allows write access. |
 | Site shows the README or an old version | Settings → Pages → Source must be **GitHub Actions**; check the **Deploy website** run in the Actions tab. |
 
-## Updating from an older version
+## Moving from the Mac schedule
 
-Older versions kept `token.json`, `sheet_id.txt`, `sync_state.json`, the `.xlsx` and `backups/`
-in the project folder, and had `install.sh` at the top level. After pulling:
+Older versions ran the update on a Mac with a launchd job (`scripts/install.sh`). Once the GitHub
+workflow runs green (step 5), remove the Mac's job so both don't update:
 
-1. Run any update (`python3 fantasy_update.py`). It moves those files into `data/`, keeping your sheet link.
-2. Run `scripts/install.sh` once so the schedule uses `.venv/` and logs to `data/update.log`.
+```bash
+scripts/remove-mac-schedule.sh
+```
+
+The Full Disk Access entry for Python that the old setup needed can also be removed in
+**System Settings → Privacy & Security → Full Disk Access**.

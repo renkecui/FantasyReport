@@ -3,7 +3,6 @@ from typing import List
 
 from .run_options import RunOptions
 from ..common.logger import Logger
-from ..common.mac_notifier import MacNotifier
 from ..common.retry_policy import RetryPolicy
 from ..common.sync_error import SyncError
 from ..config.config import Config
@@ -23,10 +22,9 @@ class SyncPipeline:
     """One run: ESPN -> validate -> local .xlsx -> Google Sheet, and the website.
     Google and the website are published independently: one failing doesn't stop the other."""
 
-    def __init__(self, paths: Paths, options: RunOptions, notifier=None):
+    def __init__(self, paths: Paths, options: RunOptions):
         self.paths = paths
         self.options = options
-        self.notifier = notifier or MacNotifier()
         self.log = Logger()
         self.retry = RetryPolicy()
         self.auth = GoogleAuth(paths)
@@ -74,8 +72,8 @@ class SyncPipeline:
     def publish_sheet(self, config: Config):
         publisher = GoogleSheetPublisher(self.paths, self.auth, self.retry)
         result = publisher.publish(self.paths.local_xlsx, config.sheet_title, interactive=self.options.login)
-        if result.warnings:
-            self.notifier.notify("Fantasy Report sync", result.warnings[-1])
+        for warning in result.warnings:
+            self.log.warning(warning)
         return f"{'Created' if result.created else 'Updated'} Google Sheet: {result.url}"
 
     def publish_site(self, site_dir):

@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TD
-    S["launchd · 8:00 AM + 5:00 PM daily<br/>or python3 fantasy_update.py"] --> E["fantasy_update.py<br/>switch to .venv, Application().main()"]
+    S["GitHub Actions · update.yml<br/>8:00 AM + 5:00 PM New York<br/>or python3 fantasy_update.py"] --> E["fantasy_update.py<br/>switch to .venv if present, Application().main()"]
     E --> P["Paths.prepare()<br/>create data/, move old files"]
     P --> K{"RunLock<br/>another run going?"}
     K -- yes --> X["Stop: SyncError"]
@@ -28,19 +28,23 @@ flowchart TD
     U --> PR["Add edit warning to tabs<br/>(Sheets API, best effort)"]
     PR --> ST[("data/sync_state.json")]
     ST --> D
-    X --> M["Log error + Mac notification<br/>exit 1, sheet untouched"]
+    X --> M["Log error<br/>exit 1 → GitHub emails you, sheet untouched"]
 ```
 
 Back to the [README](../README.md) · See also [Setup](SETUP.md)
 
 ## How a run works
 
-1. **Start.** launchd runs `fantasy_update.py` at 8:00 AM and 5:00 PM, or you run it by hand. If `.venv/`
-   exists, the script restarts itself with the `.venv` Python so the right packages load.
+1. **Start.** The **Update league data** workflow (`.github/workflows/update.yml`) runs
+   `fantasy_update.py` on GitHub's servers at 8:00 AM and 5:00 PM New York time. Cron is in UTC, so
+   each time is scheduled at both daylight-saving hours and only the one that is 8 / 5 in New York
+   continues. It writes the `GOOGLE_TOKEN_JSON` / `GOOGLE_SHEET_ID` secrets to `data/`, and `Config`
+   reads the other secrets as environment variables because there is no `config.json`. You can also
+   run it by hand on a computer; then, if `.venv/` exists, the script restarts itself with that Python.
 2. **Prepare.** `Paths.prepare()` creates `data/` and moves files that older versions left in
    the project folder.
-3. **Lock.** `RunLock` creates `data/.update.lock` holding the process ID. A second run stops
-   with a message. A lock left by a crashed run, or one older than 6 hours, is cleared.
+3. **Lock.** `RunLock` creates `data/.update.lock` holding the process ID, so two runs on one
+   computer can't overlap (on GitHub, the workflow's `concurrency` group does the same).
 4. **Fetch.** `EspnClient` loads the league once, which includes every team's roster. It then
    reads the scoreboard and box scores for each matchup period up to the current one.
 5. **Validate.** `LeagueValidator` refuses data that looks incomplete. If it fails, nothing is
@@ -48,8 +52,9 @@ Back to the [README](../README.md) · See also [Setup](SETUP.md)
 6. **Build.** `WorkbookBuilder` writes the styled workbook to a temp file and renames it to
    `data/The_Boys_League_Stats.xlsx`.
 7. **Publish** (skipped with `--excel`). `GoogleSheetPublisher` checks the live sheet:
-   - edited since the last sync → download a backup to `data/backups/` first (if that fails, stop)
-   - deleted, trashed or no longer a Sheet → create a new one and notify you to re-share it
+   - edited since the last sync, or last changed by someone else → download a backup to `data/backups/`
+     first (if that fails, stop); on GitHub the workflow keeps it as a run artifact for 90 days
+   - deleted, trashed or no longer a Sheet → create a new one and warn you to re-share it
    - no edit access → stop
 
    Then it uploads the `.xlsx`, which Drive converts to the Google Sheet, adds the edit warning
@@ -58,12 +63,14 @@ Back to the [README](../README.md) · See also [Setup](SETUP.md)
    the sheet's formulas show; `SiteBuilder` copies `web/` and writes `league.json` into `data/site/`.
 9. **Publish the website** (when `publish_site` is `true` or with `--site-only`; never with
    `--excel` or `--no-site`). `SitePublisher` keeps a detached checkout of `main` in
-   `data/site-deploy/` (so it never touches your working branch), copies the new `league.json` to
+   `data/site-deploy/` (so it never touches a working branch), copies the new `league.json` to
    `web/league.json`, commits only that file and pushes to `main`. Nothing is committed when only the
    timestamp changed; if someone else pushed meanwhile, it rebuilds on top and tries once more. The
-   **Deploy website** workflow (`.github/workflows/pages.yml`) then deploys `web/` to GitHub Pages. Google and the website
+   **Deploy website** workflow (`.github/workflows/pages.yml`) then deploys `web/` to GitHub Pages
+   (`update.yml` calls it directly, because a push made by a workflow doesn't start other workflows). Google and the website
    are published independently: if one fails, the other still runs, and the run reports the failure.
-10. **Report.** Success or failure goes to `data/update.log`. Failures also show a Mac notification.
+10. **Report.** Success or failure goes to the log (stdout). On GitHub, warnings and errors also show
+    on the run's summary page, and a failed run (exit 1) emails you.
 
 ## Code layout
 
@@ -74,20 +81,19 @@ One class per file, and each file is named after its class (`LeagueStats` → `l
 fantasy_update.py                 entry point: .venv switch, then Application(root).main()
 nbafantasy/
 ├── app/
-│   ├── application.py            Application (singleton): paths, run lock, logging, failure alerts
+│   ├── application.py            Application (singleton): paths, run lock, logging failures
 │   ├── sync_pipeline.py          SyncPipeline: the steps of a run (fetch, build, publish)
 │   └── run_options.py            RunOptions: the command-line flags
 ├── common/
 │   ├── singleton.py              Singleton: metaclass, one instance per process
 │   ├── sync_error.py             SyncError: a known problem that stops the run
-│   ├── logger.py                 Logger (singleton): the run's log
-│   ├── mac_notifier.py           MacNotifier (singleton): macOS notifications
+│   ├── logger.py                 Logger (singleton): the run's log; GitHub annotations on Actions
 │   ├── files.py                  Files: atomic write, read
 │   ├── retry_policy.py           RetryPolicy: retries temporary errors
 │   └── run_lock.py               RunLock: stops two runs overlapping
 ├── config/
 │   ├── paths.py                  Paths: where every file lives
-│   └── config.py                 Config: the contents of config.json
+│   └── config.py                 Config: config.json, or environment variables (GitHub secrets)
 ├── models/
 │   ├── categories.py             Categories: the 9 scoring categories and player stats
 │   ├── league_data.py            LeagueData
@@ -128,8 +134,10 @@ web/
 worker/                           Cloudflare Worker: login and team themes (src/, test/, wrangler.toml)
 tests/                            one test file per class (test_league_stats.py, ...); sample_league.py
                                   holds SampleLeague, a made-up league for tests
-scripts/                          install.sh (venv + login + launchd), uninstall.sh
+scripts/                          setup.sh (venv + Google login), remove-mac-schedule.sh (old launchd job)
+.github/workflows/update.yml      the scheduled update: 8 AM / 5 PM New York time, then deploys the site
 .github/workflows/pages.yml       deploys web/ to GitHub Pages when it changes on main
+requirements.txt                  Python packages (used by setup.sh and the workflow)
 .githooks/pre-commit              blocks commits of private files and secrets
 ```
 
@@ -138,7 +146,7 @@ constructor, and steps exchange only the plain data objects in `models/`. There 
 module-level functions: helpers are static methods on a class (`Files`, `Ranking`).
 
 **Singletons.** Classes that must exist once per process use the `Singleton` metaclass:
-`Logger` (the one log stream), `MacNotifier` and `Application`. Calling the class returns the same
+`Logger` (the one log stream) and `Application`. Calling the class returns the same
 instance every time; `reset()` exists for tests. Data and settings (`Paths`, `Config`) are
 deliberately *not* singletons, so tests can build them with different values.
 
@@ -240,10 +248,10 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
 |---|---|
 | ESPN data incomplete | Validation fails and nothing changes. Checks: at least 2 teams; 2 rows per matchup in each finished week (one bye allowed when the team count is odd); category scores add up to 9; every team has a roster; `my_team_name` exists. |
 | Someone edited the sheet | Detected by comparing `modifiedTime` with `data/sync_state.json`. A backup goes to `data/backups/` (last 20 kept) before replacing. If the backup fails, the run stops. |
-| Sheet deleted or trashed | A new sheet is created, `data/sheet_id.txt` is updated, and you're notified to re-share. |
+| Sheet deleted or trashed | A new sheet is created and a warning says to re-share it (on GitHub, also put the new ID into `GOOGLE_SHEET_ID`). |
 | Lost edit access | The run stops; nothing changes. |
 | Temporary errors | Up to 3 tries with growing waits for network errors, Google 429/5xx and rate-limit 403s. ESPN login errors and other 4xx errors fail immediately. |
-| Website publish fails | Logged and notified; the Google Sheet update still happens (and the other way round). The run exits with an error. |
+| Website publish fails | Logged; the Google Sheet update still happens (and the other way round). The run exits with an error. |
 | Website unchanged | No commit and no push. |
 | Crash mid-write | The token, sheet ID, state and `.xlsx` are written to a temp file and then renamed, so they're never left half-written. |
 
@@ -254,9 +262,8 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
 | ESPN Fantasy API (`espn-api` package) | League, matchups, box scores, rosters | `espn_s2` + `SWID` cookies |
 | Google Drive API v3 | Upload/convert the sheet, check it, export backups | OAuth, `drive.file` scope (only files this app created) |
 | Google Sheets API v4 | Edit-warning protection on each tab (optional) | Same OAuth login |
-| GitHub (git push) + GitHub Actions + Pages | The run pushes `web/league.json` to `main`; the **Deploy website** workflow publishes `web/` | Your existing git login; the workflow uses GitHub's built-in Pages token |
-| macOS launchd / osascript | Daily schedule / notifications | Local |
-| GitHub Actions (optional, instead of launchd) | **Update league data** workflow: the same run at 8 AM / 5 PM New York time, then deploys the site | Repository secrets; `Config` reads them as environment variables when there is no `config.json` |
+| GitHub Actions | **Update league data**: the scheduled run at 8 AM / 5 PM New York time; **Deploy website**: publishes `web/` | Repository secrets (ESPN, Google), read as environment variables; the built-in token pushes `web/league.json` and deploys Pages |
+| GitHub Pages | Hosts the website | Public |
 
 ## Design decisions
 
@@ -266,7 +273,7 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
 - **Formulas instead of computed numbers** in Season Totals and the rank columns, so the sheet
   shows how each number is derived and recalculates if a value is corrected.
 - **The website is static and built by the same run**, so it reuses the validated data, needs no
-  server, and the ESPN cookies stay on the Mac. Later ideas are in [TODO.md](TODO.md).
+  server, and the ESPN cookies stay in GitHub's encrypted secrets. Later ideas are in [TODO.md](TODO.md).
 - **Everything on `main`.** The site's code and its data (`web/league.json`) live on one branch;
   a data commit is added only when the numbers change. New work happens on working branches merged
   into `main`. GitHub Actions deploys `web/`, so no separate site branch is needed.
