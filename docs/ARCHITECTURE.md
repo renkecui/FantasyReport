@@ -156,7 +156,8 @@ deliberately *not* singletons, so tests can build them with different values.
 | `components/widgets.js` | `Widgets` | Shared pieces: team name with color dot, result badges, the switches |
 | `components/sortable-table.js` | `SortableTable` | A table whose columns sort on click; remembers each table's sort |
 | `components/account-menu.js` | `AccountMenu` | The header's "Log in" button, or your team with "Team theme…" and "Log out" |
-| `components/login-dialog.js`, `components/theme-dialog.js` | `LoginDialog`, `ThemeDialog` | Log in (team + league password + Remember me); pick a free theme |
+| `components/login-gate.js` | `LoginGate` | The login screen shown instead of the site until someone logs in (username = team name, any case; league password; Remember me) |
+| `components/theme-dialog.js` | `ThemeDialog` | Pick a free theme |
 | `pages/page.js` → `season-page.js`, `weekly-page.js`, `team-page.js` | `Page` → `SeasonPage`, `WeeklyPage`, `TeamPage` | One class per page; the base class builds the category columns |
 | `router.js` | `Router` | Maps `#/season`, `#/weekly/<n>`, `#/team/<name>` to a page |
 | `app.js` | `App` (singleton) | Loads the data, draws the header, starts the router |

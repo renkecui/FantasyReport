@@ -162,7 +162,8 @@ Cloudflare's free plan. Without it, login is hidden and every team keeps its def
    (Workers & Pages in the dashboard); deploy again afterwards.
 5. Put that address in `web/index.html`:
    `<meta name="nbafantasy-api" content="https://nbafantasy-api.<your-name>.workers.dev">`,
-   then commit and push to `main`. The site redeploys and shows **Log in** in the header.
+   then commit and push to `main`. The site redeploys, and from then on visitors see a
+   login screen (username = their team name, password = the league password) before any league data.
 
 Good to know:
 - **Changing the password**: run `npx wrangler secret put LEAGUE_PASSWORD` again. Everyone is logged out.

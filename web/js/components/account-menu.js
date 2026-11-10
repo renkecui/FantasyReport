@@ -1,4 +1,3 @@
-import { LoginDialog } from "./login-dialog.js";
 import { ThemeDialog } from "./theme-dialog.js";
 import { Widgets } from "./widgets.js";
 import { ApiClient } from "../state/api-client.js";
@@ -7,7 +6,7 @@ import { Dom } from "../util/dom.js";
 
 const el = Dom.el;
 
-/** The header's login area: "Log in", or your team with "Team theme" and "Log out". */
+/** The header's account area: your team with "Team theme" and "Log out" (empty when logged out). */
 export class AccountMenu {
   constructor(container, onChange) {
     this.container = container;
@@ -21,9 +20,7 @@ export class AccountMenu {
     }
     const session = Session.instance();
     if (!session.loggedIn) {
-      this.container.replaceChildren(el("button", {
-        type: "button", class: "btn", onclick: () => new LoginDialog(this.onChange).open(),
-      }, "Log in"));
+      this.container.replaceChildren();
       return;
     }
     const menu = el("details", { class: "account-menu" },

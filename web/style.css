@@ -217,6 +217,36 @@ main.wrap { padding-top: 36px; padding-bottom: 8px; outline: none; }
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+/* The login screen shown instead of the site until someone logs in. */
+body.locked .tabs, body.locked .site-footer { display: none; }
+.login-gate { display: flex; justify-content: center; padding: 48px 0 64px; }
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(420px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.login-card h2 { margin: 0 0 4px; font-size: 20px; }
+.login-card .muted { color: var(--muted); margin: 0 0 10px; font-size: 14px; }
+.login-card label { font-size: 13px; font-weight: 600; margin-top: 8px; }
+.login-card label.check { font-weight: 500; display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.login-card input[type="text"], .login-card input[type="password"] {
+  width: 100%;
+  padding: 9px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.login-card input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.login-card .hint { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.login-card .btn.primary { margin-top: 14px; padding: 10px 14px; font-size: 15px; }
 .form-error { color: var(--loss); font-size: 14px; min-height: 1.2em; margin: 8px 0 0; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 
@@ -239,6 +269,7 @@ main.wrap { padding-top: 36px; padding-bottom: 8px; outline: none; }
 }
 .swatch:hover:not(:disabled) { border-color: var(--team); }
 .swatch[aria-pressed="true"] { border-color: var(--team); box-shadow: inset 0 0 0 2px var(--team); }
+.swatch:focus-visible { outline-color: var(--team); }
 .swatch:disabled { opacity: 0.45; cursor: not-allowed; }
 .swatch-color { grid-row: 1 / 3; width: 22px; height: 22px; border-radius: 50%; background: var(--team); }
 .swatch-name { font-size: 14px; font-weight: 600; }

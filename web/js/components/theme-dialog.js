@@ -25,12 +25,14 @@ export class ThemeDialog {
         return el("div", { role: "listitem" }, el("button", {
           type: "button", class: "swatch", disabled: Boolean(owner),
           "aria-pressed": String(t.id === mine), style: { "--team": t.color },
+          // Start on the current theme, not the first free one (which would look selected).
+          autofocus: t.id === mine,
           title: owner ? `${t.name}: taken by ${owner}` : t.name,
           onclick: () => choose(t.id),
         },
           el("span", { class: "swatch-color", "aria-hidden": "true" }),
           el("span", { class: "swatch-name" }, t.name),
-          el("span", { class: "swatch-note" }, t.id === mine ? "Current" : owner ? `Taken by ${owner}` : "")));
+          el("span", { class: "swatch-note" }, t.id === mine ? "Current" : owner ?? "")));
       }));
     };
 

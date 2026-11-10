@@ -9,13 +9,16 @@
  *   TeamThemes (singleton)        each team's color theme
  *   Widgets                       small shared pieces: team names, result badges, switches
  *   SortableTable                 a table whose columns sort on click
- *   AccountMenu, LoginDialog, ThemeDialog   the header's login area and its dialogs
+ *   LoginGate                     the login screen shown instead of the site until you log in
+ *   AccountMenu, ThemeDialog      the header's account menu and its theme dialog
  *   Page → SeasonPage, WeeklyPage, TeamPage
  *   Router                        #/season, #/weekly/<n>, #/team/<name> → a page
  *   App (singleton)               loads everything, draws the header, starts the router
  */
 import { AccountMenu } from "./components/account-menu.js";
+import { LoginGate } from "./components/login-gate.js";
 import { Router } from "./router.js";
+import { ApiClient } from "./state/api-client.js";
 import { League } from "./state/league.js";
 import { Session } from "./state/session.js";
 import { TeamThemes } from "./state/team-themes.js";
@@ -32,9 +35,13 @@ export class App {
   constructor() {
     if (App.#instance) throw new Error("App is a singleton; use App.instance()");
     this.main = document.getElementById("main");
-    this.router = new Router(this.main, document.querySelector(".tabs"));
+    this.router = new Router(this.main, document.querySelector(".tabs"), () => this.locked);
     this.account = new AccountMenu(document.getElementById("account"), () => this.refresh());
+    this.gate = new LoginGate(this.main, () => this.refresh());
   }
+
+  /** With login set up (the Worker's address in index.html), nobody sees the site until they log in. */
+  get locked() { return ApiClient.instance().enabled && !Session.instance().loggedIn; }
 
   async start() {
     try {
@@ -47,17 +54,20 @@ export class App {
       return;
     }
     this.renderHeader();
-    this.account.render();
     this.router.start();
+    this.refresh();
     // A saved login may have been revoked (e.g. the league password changed).
     const session = Session.instance();
     if (session.loggedIn) session.check().then(() => { if (!session.loggedIn) this.refresh(); });
   }
 
-  /** Redraw after logging in or out, or a theme change. */
+  /** Redraw after logging in or out, or a theme change: the login screen, or the current page. */
   refresh() {
+    const locked = this.locked;
+    document.body.classList.toggle("locked", locked);
     this.account.render();
-    this.router.show();
+    if (locked) this.gate.render();
+    else this.router.show();
   }
 
   renderHeader() {
