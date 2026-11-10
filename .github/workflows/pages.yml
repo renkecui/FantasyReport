@@ -29,6 +29,16 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: main  # the latest main, including a data commit made earlier in the same run
+      # Pages lets browsers keep files for 10 minutes, so a visitor could get the new page with the old
+      # scripts (e.g. a new tab whose route the old router doesn't know). Give the scripts and the
+      # stylesheet a new address on every deploy; their relative imports move with them.
+      - name: Version the scripts and stylesheet
+        run: |
+          v=${GITHUB_SHA::8}
+          mv web/js "web/js-$v"
+          mv web/style.css "web/style-$v.css"
+          sed -i -e "s#src=\"js/main.js\"#src=\"js-$v/main.js\"#" -e "s#href=\"style.css\"#href=\"style-$v.css\"#" web/index.html
+          grep -q "js-$v/main.js" web/index.html && grep -q "style-$v.css" web/index.html
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
