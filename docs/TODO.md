@@ -1,10 +1,10 @@
 # TODO
 
-Open ideas. Done so far: the website, team color themes, login (team name + league password), and updates twice a day (8 AM and 5 PM).
+Open ideas. Done so far: the website, team color themes, login (team name + league password), and updates twice a day (7 AM and 3 PM).
 
 ## General Manager
 
-Daily tips for each team, generated on every ESPN fetch (the scheduled runs at 8 AM and 5 PM) and shown on the website to
+Daily tips for each team, generated on every ESPN fetch (the scheduled runs at 7 AM and 3 PM) and shown on the website to
 that team's logged-in member.
 
 - **Strengths and weaknesses:** which of the 9 categories the team wins and loses, from its season

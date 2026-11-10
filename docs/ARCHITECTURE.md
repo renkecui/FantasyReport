@@ -8,7 +8,7 @@ How the project fits together. Back to the [README](../README.md) · See also [S
 
 ```mermaid
 flowchart LR
-    A["update.yml<br/>8 AM + 5 PM ET"] --> B["EspnClient<br/>fetch league"]
+    A["update.yml<br/>7 AM + 3 PM ET"] --> B["EspnClient<br/>fetch league"]
     B --> C{"LeagueValidator<br/>complete?"}
     C -- no --> X["Stop<br/>nothing changes"]
     C -- yes --> D["WorkbookBuilder<br/>.xlsx"]
@@ -30,7 +30,7 @@ flowchart LR
 ## How a run works
 
 1. **Start.** The **Update league data** workflow (`.github/workflows/update.yml`) runs
-   `fantasy_update.py` on GitHub's servers at 8:00 AM and 5:00 PM New York time. Cron is in UTC, so
+   `fantasy_update.py` on GitHub's servers at 7:00 AM and 3:00 PM New York time. Cron is in UTC, so
    each time is scheduled at both daylight-saving hours and only the one that is 8 / 5 in New York
    continues. It writes the `GOOGLE_TOKEN_JSON` / `GOOGLE_SHEET_ID` secrets to `data/`, and `Config`
    reads the other secrets as environment variables because there is no `config.json`. You can also
@@ -129,7 +129,7 @@ worker/                           Cloudflare Worker: login and team themes (src/
 tests/                            one test file per class (test_league_stats.py, ...); sample_league.py
                                   holds SampleLeague, a made-up league for tests
 scripts/                          setup.sh (venv + Google login), remove-mac-schedule.sh (old launchd job)
-.github/workflows/update.yml      the scheduled update: 8 AM / 5 PM New York time, then deploys the site
+.github/workflows/update.yml      the scheduled update: 7 AM / 3 PM New York time, then deploys the site
 .github/workflows/pages.yml       deploys web/ to GitHub Pages when it changes on main
 .github/workflows/worker.yml      tests and deploys worker/ to Cloudflare when it changes on main
 requirements.txt                  Python packages (used by setup.sh and the workflow)
@@ -258,7 +258,7 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
 | ESPN Fantasy API (`espn-api` package) | League, matchups, box scores, rosters | `espn_s2` + `SWID` cookies |
 | Google Drive API v3 | Upload/convert the sheet, check it, export backups | OAuth, `drive.file` scope (only files this app created) |
 | Google Sheets API v4 | Edit-warning protection on each tab (optional) | Same OAuth login |
-| GitHub Actions | **Update league data**: the scheduled run at 8 AM / 5 PM New York time; **Deploy website**: publishes `web/` | Repository secrets (ESPN, Google), read as environment variables; the built-in token pushes `web/league.json` and deploys Pages |
+| GitHub Actions | **Update league data**: the scheduled run at 7 AM / 3 PM New York time; **Deploy website**: publishes `web/` | Repository secrets (ESPN, Google), read as environment variables; the built-in token pushes `web/league.json` and deploys Pages |
 | GitHub Pages | Hosts the website | Public |
 
 ## Design decisions

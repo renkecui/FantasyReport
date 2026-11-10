@@ -1,4 +1,4 @@
-# Fetches the league from ESPN at 8 AM and 5 PM New York time (or soon after), on GitHub's servers:
+# Fetches the league from ESPN at 7 AM and 3 PM New York time (or soon after), on GitHub's servers:
 # updates the Google Sheet and commits web/league.json to main, then deploys the website.
 # Settings come from repository secrets; see docs/SETUP.md step 5.
 name: Update league data
@@ -7,10 +7,10 @@ on:
   schedule:
     # Cron runs in UTC, and New York is UTC-4 in summer and UTC-5 in winter. GitHub also starts
     # scheduled runs late, or skips them, when it's busy. So each update has three tries an hour
-    # apart, off the top of the hour; the first step lets only the first one after 8 AM / 5 PM
+    # apart, off the top of the hour; the first step lets only the first one after 7 AM / 3 PM
     # New York time do the work, however late it starts.
-    - cron: "17 12,13,14 * * *"
-    - cron: "17 21,22,23 * * *"
+    - cron: "17 11,12,13 * * *"
+    - cron: "17 19,20,21 * * *"
   workflow_dispatch:  # "Run workflow" button in the Actions tab (runs at any time)
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
     outputs:
       ran: ${{ steps.when.outputs.go }}
     steps:
-      - name: Only the first try after 8 AM / 5 PM in New York, once the secrets are set
+      - name: Only the first try after 7 AM / 3 PM in New York, once the secrets are set
         id: when
         env:
           CONFIGURED: ${{ secrets.LEAGUE_ID != '' }}
@@ -42,12 +42,12 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" != "schedule" ]; then
             echo "go=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          # The most recent 8 AM or 5 PM in New York (in UTC), and the hours since then.
+          # The most recent 7 AM or 3 PM in New York (in UTC), and the hours since then.
           read -r due hours < <(python3 -c '
           from datetime import datetime, timedelta, timezone
           from zoneinfo import ZoneInfo
           now = datetime.now(ZoneInfo("America/New_York"))
-          due = max(t for d in (0, 1) for h in (8, 17)
+          due = max(t for d in (0, 1) for h in (7, 15)
                     if (t := (now - timedelta(days=d)).replace(hour=h, minute=0, second=0, microsecond=0)) <= now)
           print(due.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), int((now - due).total_seconds() // 3600))')
           if [ "$hours" -ge 4 ]; then

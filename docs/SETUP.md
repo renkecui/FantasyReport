@@ -87,7 +87,7 @@ This:
 ## 5. Schedule the updates on GitHub Actions
 
 The **Update league data** workflow (`.github/workflows/update.yml`) runs the update on GitHub's
-servers at 8:00 AM and 5:00 PM New York time: it fetches ESPN, updates the Google Sheet, commits
+servers at 7:00 AM and 3:00 PM New York time: it fetches ESPN, updates the Google Sheet, commits
 `web/league.json` to `main` and deploys the website. It reads its settings from repository secrets
 instead of `config.json`.
 

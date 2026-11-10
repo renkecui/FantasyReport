@@ -3,7 +3,7 @@
 Daily reports for an ESPN fantasy basketball league (9-category head-to-head), as a shared Google
 Sheet and a members-only website.
 
-Twice a day, at 8:00 AM and 5:00 PM New York time, a scheduled GitHub Actions workflow pulls
+Twice a day, at 7:00 AM and 3:00 PM New York time, a scheduled GitHub Actions workflow pulls
 matchups, category stats and rosters from ESPN, checks them, and then:
 
 - replaces the contents of one Google Sheet (same link every day), and
@@ -60,7 +60,7 @@ web/                the website: plain HTML/CSS and JS modules, one class per fi
 worker/             Cloudflare Worker: login, session tokens, team themes (Workers KV)
 tests/              Python unit tests and a made-up sample league
 scripts/            setup.sh (local setup + Google login), remove-mac-schedule.sh (old Mac schedule)
-.github/workflows/  update.yml (8 AM / 5 PM update), pages.yml (deploys the website), worker.yml (deploys the Worker)
+.github/workflows/  update.yml (7 AM / 3 PM update), pages.yml (deploys the website), worker.yml (deploys the Worker)
 docs/               SETUP, ARCHITECTURE, TODO
 ```
 

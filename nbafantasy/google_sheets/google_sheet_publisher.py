@@ -19,7 +19,7 @@ class GoogleSheetPublisher:
     XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     GSHEET = "application/vnd.google-apps.spreadsheet"
     KEEP_BACKUPS = 20
-    EDIT_WARNING = "Auto-updated from ESPN every day at 8 AM and 5 PM. Edits here will be replaced."
+    EDIT_WARNING = "Auto-updated from ESPN every day at 7 AM and 3 PM. Edits here will be replaced."
 
     def __init__(self, paths, auth=None, retry=None):
         self.paths = paths
