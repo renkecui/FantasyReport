@@ -1,0 +1,52 @@
+# Tests and deploys the Cloudflare Worker (worker/: login and team themes) when it changes on main,
+# or by hand. Needs the CLOUDFLARE_API_TOKEN repository secret (docs/SETUP.md step 6); the Worker's own
+# secrets (LEAGUE_PASSWORD, TOKEN_SECRET) stay in Cloudflare and aren't touched by a deploy.
+name: Deploy Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker/**"
+      - "web/themes.json"     # the Worker bundles the theme list
+      - "web/js/shared/**"    # and the theme assignment rules
+      - ".github/workflows/worker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN secret isn't set, so the Worker wasn't deployed (docs/SETUP.md step 6)."
+            exit 0
+          fi
+          npx wrangler deploy

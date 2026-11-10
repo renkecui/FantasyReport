@@ -1,6 +1,8 @@
 # Cloudflare Worker for the league website: login and team themes. Setup: docs/SETUP.md step 6.
 name = "nbafantasy-api"
 main = "src/index.js"
+# Cloudflare account (not a secret). GitHub deploys with the CLOUDFLARE_API_TOKEN secret.
+account_id = "65b4d70cddbd8f97a296bf2394480d19"
 compatibility_date = "2025-10-01"
 # Serve the API at https://nbafantasy-api.<subdomain>.workers.dev (no per-version preview URLs).
 workers_dev = true

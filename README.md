@@ -60,7 +60,7 @@ web/                the website: plain HTML/CSS and JS modules, one class per fi
 worker/             Cloudflare Worker: login, session tokens, team themes (Workers KV)
 tests/              Python unit tests and a made-up sample league
 scripts/            setup.sh (local setup + Google login), remove-mac-schedule.sh (old Mac schedule)
-.github/workflows/  update.yml (8 AM / 5 PM update), pages.yml (deploys the website)
+.github/workflows/  update.yml (8 AM / 5 PM update), pages.yml (deploys the website), worker.yml (deploys the Worker)
 docs/               SETUP, ARCHITECTURE, TODO
 ```
 

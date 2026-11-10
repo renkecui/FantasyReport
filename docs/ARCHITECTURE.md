@@ -137,6 +137,7 @@ tests/                            one test file per class (test_league_stats.py,
 scripts/                          setup.sh (venv + Google login), remove-mac-schedule.sh (old launchd job)
 .github/workflows/update.yml      the scheduled update: 8 AM / 5 PM New York time, then deploys the site
 .github/workflows/pages.yml       deploys web/ to GitHub Pages when it changes on main
+.github/workflows/worker.yml      tests and deploys worker/ to Cloudflare when it changes on main
 requirements.txt                  Python packages (used by setup.sh and the workflow)
 .githooks/pre-commit              blocks commits of private files and secrets
 ```

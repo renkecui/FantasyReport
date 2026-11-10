@@ -126,45 +126,39 @@ Good to know:
 Every team already has its own color on the website. To let people **log in** (their team +
 the league password) and **pick their team's color theme**, run the small API in `worker/` on
 Cloudflare's free plan. Without it, login is hidden and every team keeps its default theme.
+Everything below happens in a browser; the **Deploy Worker** workflow (`.github/workflows/worker.yml`)
+tests and deploys `worker/` from GitHub.
 
-1. Create a free account at https://dash.cloudflare.com/sign-up (no credit card needed).
-2. In Terminal, from the project folder:
-   ```bash
-   cd worker
-   npm install
-   npx wrangler login
-   npx wrangler kv namespace create KV
-   ```
-   `wrangler login` opens your browser to allow access. The last command prints an `id`;
-   paste it into `worker/wrangler.toml` in place of `REPLACE_WITH_KV_NAMESPACE_ID`.
-3. Set the two secrets. Each command asks you to type the value (it is never saved in the repo):
-   ```bash
-   npx wrangler secret put LEAGUE_PASSWORD
-   npx wrangler secret put TOKEN_SECRET
-   ```
-   `LEAGUE_PASSWORD` is what you give the league. For `TOKEN_SECRET`, use a long random value,
-   e.g. the output of `openssl rand -hex 32`.
-4. Put it online:
-   ```bash
-   npx wrangler deploy
-   ```
-   It prints the Worker's address, like `https://nbafantasy-api.<your-name>.workers.dev`.
-   The first time, Cloudflare asks you to register a `workers.dev` subdomain for your account
-   (Workers & Pages in the dashboard); deploy again afterwards.
-5. Put that address in `web/index.html`:
+1. Create a free account at https://dash.cloudflare.com/sign-up (no credit card needed). Under
+   **Workers & Pages**, register a `workers.dev` subdomain when asked.
+2. Put your account's ID (shown on the dashboard's **Account home**, or in the URL) into
+   `account_id` in `worker/wrangler.toml`.
+3. **Storage & Databases → KV → Create**: name it e.g. `LEAGUE_KV`, then copy its **ID** into the
+   `[[kv_namespaces]]` `id` in `worker/wrangler.toml` (keep `binding = "KV"`).
+4. **My Profile → API Tokens → Create Token**, template **Edit Cloudflare Workers**, for your account.
+   Add it on GitHub as the repository secret `CLOUDFLARE_API_TOKEN`.
+5. Commit and push `worker/wrangler.toml`, or run **Actions → Deploy Worker → Run workflow**. The run's
+   log prints the Worker's address, like `https://nbafantasy-api.<your-name>.workers.dev`.
+6. In Cloudflare, open **Workers & Pages → nbafantasy-api → Settings → Variables and Secrets** and add
+   two values of type **Secret**:
+   - `LEAGUE_PASSWORD`: what you give the league.
+   - `TOKEN_SECRET`: any long random text (e.g. from a password manager's generator).
+7. Put the Worker's address in `web/index.html`:
    `<meta name="nbafantasy-api" content="https://nbafantasy-api.<your-name>.workers.dev">`,
    then commit and push to `main`. The site redeploys, and from then on visitors see a
    login screen (username = their team name, password = the league password) before any league data.
 
 Good to know:
-- **Changing the password**: run `npx wrangler secret put LEAGUE_PASSWORD` again. Everyone is logged out.
+- Any push that changes `worker/` (or `web/themes.json`, `web/js/shared/`) redeploys the Worker. Deploys
+  never touch its secrets.
+- **Changing the password**: edit `LEAGUE_PASSWORD` in the Worker's **Variables and Secrets**.
+  Everyone is logged out.
 - **"Remember me"** keeps people logged in until `SESSION_END` in `worker/wrangler.toml` (the end of
   the season); without it, a login lasts 12 hours or until the browser closes.
 - Five wrong passwords from one connection lock login for 15 minutes.
 - The site's address is in `ALLOWED_ORIGINS` in `worker/wrangler.toml`; only that site can use the API.
-- Test locally: copy `worker/.dev.vars.example` to `worker/.dev.vars`, run `npm run dev` in `worker/`,
-  and set the meta tag in `data/site/index.html` (not `web/`) to `http://127.0.0.1:8787` while previewing.
-- Worker tests: `cd worker && npm test`.
+- Worker tests run in the workflow. To work on it on a computer: `cd worker && npm install && npm test`;
+  `npm run dev` runs it locally with values from `worker/.dev.vars` (copy `.dev.vars.example`).
 
 ---
 
