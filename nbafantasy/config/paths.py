@@ -53,7 +53,8 @@ class Paths:
 
     @property
     def local_xlsx(self):
-        return self._data("The_Boys_League_Stats.xlsx")
+        """The local copy of the workbook that is uploaded to the Google Sheet."""
+        return self._data("Fantasy_Report.xlsx")
 
     @property
     def site(self):

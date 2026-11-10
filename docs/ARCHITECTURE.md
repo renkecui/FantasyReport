@@ -44,7 +44,7 @@ flowchart LR
 5. **Validate.** `LeagueValidator` refuses data that looks incomplete. If it fails, nothing is
    written and the Google Sheet is left alone.
 6. **Build.** `WorkbookBuilder` writes the styled workbook to a temp file and renames it to
-   `data/The_Boys_League_Stats.xlsx`.
+   `data/Fantasy_Report.xlsx`.
 7. **Publish** (skipped with `--excel`). `GoogleSheetPublisher` checks the live sheet:
    - edited since the last sync, or last changed by someone else → download a backup to `data/backups/`
      first (if that fails, stop); on GitHub the workflow keeps it as a run artifact for 90 days
