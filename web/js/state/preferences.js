@@ -1,3 +1,4 @@
+/** This viewer's display settings (e.g. table options), kept in localStorage. Singleton. */
 export class Preferences {
   static #instance = null;
   static PREFIX = "nbafantasy.";

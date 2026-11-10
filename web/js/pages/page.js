@@ -8,6 +8,7 @@ import { RankColor } from "../util/rank-color.js";
 
 const el = Dom.el;
 
+/** Base class for a page: subclasses give a title and render() its content. */
 export class Page {
   constructor(param) {
     this.league = League.instance();

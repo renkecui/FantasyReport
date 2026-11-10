@@ -27,6 +27,7 @@ import { Format } from "./util/format.js";
 
 const el = Dom.el;
 
+/** Starts the site: loads the league and themes, then shows the login screen or the current page. */
 export class App {
   static #instance = null;
 

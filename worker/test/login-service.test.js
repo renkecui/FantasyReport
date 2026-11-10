@@ -4,7 +4,8 @@ import { HttpError } from "../src/http-error.js";
 import { LoginService } from "../src/login-service.js";
 import { RateLimiter } from "../src/rate-limiter.js";
 import { SessionToken } from "../src/session-token.js";
-import { FakeKv, FakeTeams } from "./fake-kv.js";
+import { FakeKv } from "./fake-kv.js";
+import { FakeTeams } from "./fake-teams.js";
 
 function service(kv = new FakeKv()) {
   const tokens = new SessionToken("secret", "hoops");

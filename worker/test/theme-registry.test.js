@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ThemeRegistry } from "../src/theme-registry.js";
-import { FakeKv, FakeTeams } from "./fake-kv.js";
+import { FakeKv } from "./fake-kv.js";
+import { FakeTeams } from "./fake-teams.js";
 
 const catalog = [{ id: "red" }, { id: "blue" }, { id: "green" }];
 

@@ -4,6 +4,7 @@ from typing import ClassVar, Dict
 
 @dataclass(frozen=True)
 class Player:
+    """One player on a fantasy roster: lineup slot, NBA team, status and per-game stats."""
     slot: str        # ESPN lineup slot, e.g. "PG", "UT", "BE", "IR"
     name: str
     nba_team: str

@@ -4,6 +4,7 @@ import { League } from "../state/league.js";
 import { Format } from "../util/format.js";
 import { RankColor } from "../util/rank-color.js";
 
+/** #/season: every team's season record and category totals, with ranks. */
 export class SeasonPage extends Page {
   get title() { return "Season Totals"; }
 

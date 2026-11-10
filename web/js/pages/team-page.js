@@ -8,6 +8,7 @@ import { RankColor } from "../util/rank-color.js";
 
 const el = Dom.el;
 
+/** #/team/<name>: one team's roster with player stats, and its week-by-week results. */
 export class TeamPage extends Page {
   get title() { return "Teams"; }
 

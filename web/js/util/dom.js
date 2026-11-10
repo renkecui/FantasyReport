@@ -1,3 +1,4 @@
+/** Builds DOM elements in one call. */
 export class Dom {
   /** Dom.el("td", { class: "x", title: "y", onclick: fn, style: { "--h": 120 } }, child, "text", ...) */
   static el(tag, attrs, ...children) {

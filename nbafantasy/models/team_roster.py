@@ -6,6 +6,7 @@ from .player import Player
 
 @dataclass
 class TeamRoster:
+    """A fantasy team's current players."""
     team: str
     players: List[Player] = field(default_factory=list)
 

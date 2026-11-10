@@ -1,3 +1,4 @@
+/** Formats stats and seasons for display (".482", "1,234", "2026–27"). */
 export class Format {
   static PCT = new Set(["FG%", "FT%"]);
 

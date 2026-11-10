@@ -1,3 +1,4 @@
+/** Colors ranks on a green (best) to red (worst) scale. */
 export class RankColor {
   /** Hue for a position on the scale: 0 = best (green) … 1 = worst (red). */
   static hue(t) { return Math.round(140 * (1 - Math.min(1, Math.max(0, t)))); }

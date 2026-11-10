@@ -5,6 +5,7 @@ import { Dom } from "../util/dom.js";
 
 const el = Dom.el;
 
+/** Small pieces shared by the pages: team names with their color dot, result badges, switches. */
 export class Widgets {
   static TIEBREAK_NOTE = "Category tie; the league tiebreaker decided this result.";
   static RESULT_ORDER = { W: 3, T: 2, Live: 1, L: 0 };

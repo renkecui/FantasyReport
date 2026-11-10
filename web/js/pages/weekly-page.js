@@ -7,6 +7,7 @@ import { RankColor } from "../util/rank-color.js";
 
 const el = Dom.el;
 
+/** #/weekly/<n>: one week's matchups and each team's category stats for that week. */
 export class WeeklyPage extends Page {
   get title() { return "Weekly Stats"; }
 

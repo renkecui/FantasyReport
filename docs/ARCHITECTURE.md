@@ -265,7 +265,7 @@ percentages, and league rank uses the same tie rule ("1, 2, 2, 4").
 - **Formulas instead of computed numbers** in Season Totals and the rank columns, so the sheet
   shows how each number is derived and recalculates if a value is corrected.
 - **The website is static and built by the same run**, so it reuses the validated data, needs no
-  server, and the ESPN cookies stay on the Mac. See [WEBSITE_PLAN.md](WEBSITE_PLAN.md) for later phases.
+  server, and the ESPN cookies stay on the Mac. Later ideas are in [TODO.md](TODO.md).
 - **Everything on `main`.** The site's code and its data (`web/league.json`) live on one branch;
   a data commit is added only when the numbers change. New work happens on working branches merged
   into `main`. GitHub Actions deploys `web/`, so no separate site branch is needed.

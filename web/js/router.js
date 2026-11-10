@@ -3,6 +3,7 @@ import { TeamPage } from "./pages/team-page.js";
 import { WeeklyPage } from "./pages/weekly-page.js";
 import { League } from "./state/league.js";
 
+/** Maps the address hash (#/season, #/weekly/<n>, #/team/<name>) to a page and draws it. */
 export class Router {
   static PAGES = { season: SeasonPage, weekly: WeeklyPage, team: TeamPage };
   static DEFAULT = "season";

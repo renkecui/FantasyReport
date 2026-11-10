@@ -1,6 +1,7 @@
+/** The league data (league.json) and lookups on it. Singleton: use League.instance(). */
 export class League {
   static #instance = null;
-  // Where the league data comes from. One place, so it can point elsewhere later (WEBSITE_PLAN Phase 6).
+  // Where the league data comes from (published next to the page by the daily run).
   static DATA_URL = "league.json";
   static SCHEMA_VERSION = 2;
 
