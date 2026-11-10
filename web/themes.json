@@ -8,9 +8,10 @@
   { "id": "gold", "name": "Gold", "color": "#ca8a04" },
   { "id": "magenta", "name": "Magenta", "color": "#c026d3" },
   { "id": "sky", "name": "Sky", "color": "#0284c7" },
-  { "id": "lime", "name": "Lime", "color": "#65a30d" },
   { "id": "rose", "name": "Rose", "color": "#e11d48" },
   { "id": "indigo", "name": "Indigo", "color": "#4f46e5" },
   { "id": "brown", "name": "Brown", "color": "#92400e" },
-  { "id": "slate", "name": "Slate", "color": "#475569" }
+  { "id": "slate", "name": "Slate", "color": "#475569" },
+  { "id": "mint", "name": "Mint", "color": "#87d085" },
+  { "id": "navy", "name": "Navy", "color": "#16314b" }
 ]

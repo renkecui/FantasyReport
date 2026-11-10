@@ -425,8 +425,14 @@ td.nba-team, td.slot { font-size: 12px; }
 
 .team-cell { display: inline-flex; align-items: center; gap: 8px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--team, #94a3b8); border: 1px solid rgb(0 0 0 / 0.15); }
+/* Team colors used as text: nudged toward the text color so light themes (Mint) stay readable
+   on white and dark ones (Navy) on the dark background. */
+:root { --team-ink: #000; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --team-ink: #fff; } }
+:root[data-theme="dark"] { --team-ink: #fff; }
+[style*="--team"] { --team-text: color-mix(in oklab, var(--team) 65%, var(--team-ink)); }
 .team-link { text-decoration: none; }
-.team-link:hover, .team-link:focus-visible { text-decoration: underline; color: var(--team, inherit); }
+.team-link:hover, .team-link:focus-visible { text-decoration: underline; color: var(--team-text, inherit); }
 /* In tables and matchup cards the whole cell is the link, not just the name. */
 td .team-link::after, .matchup-side .team-link::after { content: ""; position: absolute; inset: 0; }
 td.name:not(:first-child):has(.team-link), .matchup-side { position: relative; }
@@ -507,7 +513,7 @@ td:has(.team-link):hover .team-link, .matchup-side:hover .team-link { text-decor
 .team-theme .page-head h2 { font-size: 24px; }
 .team-theme .page-head h2 .dot { width: 14px; height: 14px; }
 .team-theme .stat-tile, .team-theme .table-card { border-top: 3px solid var(--team); }
-.team-theme thead tr.groups th { color: var(--team); }
+.team-theme thead tr.groups th { color: var(--team-text); }
 
 .team-summary {
   display: grid;
