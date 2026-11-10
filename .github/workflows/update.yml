@@ -1,18 +1,21 @@
-# Fetches the league from ESPN at 8 AM and 5 PM New York time, on GitHub's servers:
+# Fetches the league from ESPN at 8 AM and 5 PM New York time (or soon after), on GitHub's servers:
 # updates the Google Sheet and commits web/league.json to main, then deploys the website.
 # Settings come from repository secrets; see docs/SETUP.md step 5.
 name: Update league data
 
 on:
   schedule:
-    # Cron runs in UTC, and New York is UTC-4 in summer and UTC-5 in winter, so each time is
-    # scheduled at both UTC hours; the first step lets only the one that is 8 AM / 5 PM continue.
-    - cron: "0 12,13 * * *"
-    - cron: "0 21,22 * * *"
+    # Cron runs in UTC, and New York is UTC-4 in summer and UTC-5 in winter. GitHub also starts
+    # scheduled runs late, or skips them, when it's busy. So each update has three tries an hour
+    # apart, off the top of the hour; the first step lets only the first one after 8 AM / 5 PM
+    # New York time do the work, however late it starts.
+    - cron: "17 12,13,14 * * *"
+    - cron: "17 21,22,23 * * *"
   workflow_dispatch:  # "Run workflow" button in the Actions tab (runs at any time)
 
 permissions:
   contents: write  # push the web/league.json commit
+  actions: read    # see whether an earlier try already did this update
 
 concurrency:
   group: league-update  # never two updates at once
@@ -25,23 +28,42 @@ jobs:
     outputs:
       ran: ${{ steps.when.outputs.go }}
     steps:
-      - name: Only at 8 AM and 5 PM in New York, once the secrets are set
+      - name: Only the first try after 8 AM / 5 PM in New York, once the secrets are set
         id: when
         env:
           CONFIGURED: ${{ secrets.LEAGUE_ID != '' }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          hour=$(TZ=America/New_York date +%H)
           if [ "$CONFIGURED" != "true" ]; then
             echo "The LEAGUE_ID secret isn't set yet (docs/SETUP.md step 5)."
             [ "$GITHUB_EVENT_NAME" = "schedule" ] && echo "go=false" >> "$GITHUB_OUTPUT" && exit 0
             echo "::error::Add the repository secrets first."; exit 1
           fi
-          if [ "$GITHUB_EVENT_NAME" != "schedule" ] || [ "$hour" = "08" ] || [ "$hour" = "17" ]; then
-            echo "go=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "It's ${hour}:xx in New York; the other scheduled run handles today. Skipping."
-            echo "go=false" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
+          # The most recent 8 AM or 5 PM in New York (in UTC), and the hours since then.
+          read -r due hours < <(python3 -c '
+          from datetime import datetime, timedelta, timezone
+          from zoneinfo import ZoneInfo
+          now = datetime.now(ZoneInfo("America/New_York"))
+          due = max(t for d in (0, 1) for h in (8, 17)
+                    if (t := (now - timedelta(days=d)).replace(hour=h, minute=0, second=0, microsecond=0)) <= now)
+          print(due.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), int((now - due).total_seconds() // 3600))')
+          if [ "$hours" -ge 4 ]; then
+            echo "No update is due right now (the last one was due at $due). Skipping."
+            echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # Did an earlier try since $due already deploy? (Its "deploy" job ran and succeeded.)
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/update.yml/runs?created=%3E%3D$due&status=success" \
+                        --jq ".workflow_runs[] | select(.id != $GITHUB_RUN_ID) | .id"); do
+            if gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs" \
+                 --jq '.jobs[] | select(.name | startswith("deploy")) | .conclusion' | grep -q success; then
+              echo "Run $id already did the update due at $due. Skipping."
+              echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+          done
+          echo "go=true" >> "$GITHUB_OUTPUT"
 
       - if: steps.when.outputs.go == 'true'
         uses: actions/checkout@v4
