@@ -1,0 +1,14 @@
+{
+  "name": "nbafantasy-api",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker for the league website: login and team themes",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "wrangler": "4.45.0"
+  }
+}

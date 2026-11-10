@@ -1,6 +1,7 @@
 import { SortableTable } from "../components/sortable-table.js";
 import { Widgets } from "../components/widgets.js";
 import { Page } from "./page.js";
+import { Session } from "../state/session.js";
 import { Dom } from "../util/dom.js";
 import { Format } from "../util/format.js";
 import { RankColor } from "../util/rank-color.js";
@@ -13,7 +14,8 @@ export class TeamPage extends Page {
   constructor(param) {
     super(param);
     const names = this.league.teamNames;
-    this.name = names.includes(param) ? param : (this.league.myTeam || names[0]);
+    const session = Session.instance();
+    this.name = names.includes(param) ? param : (session.loggedIn && names.includes(session.team) ? session.team : names[0]);
     this.row = this.league.seasonRow(this.name);
     this.players = this.league.roster(this.name);
     this.n = this.league.season.length;
@@ -23,8 +25,8 @@ export class TeamPage extends Page {
 
   picker() {
     return el("nav", { class: "team-picker", "aria-label": "Teams" }, this.league.teamNames.map(t =>
-      el("a", { href: Widgets.teamHref(t), "aria-current": t === this.name ? "page" : null },
-        Widgets.dot(t), t + (this.league.isMine(t) ? " (you)" : ""))));
+      el("a", { href: Widgets.teamHref(t), "aria-current": t === this.name ? "page" : null, style: Widgets.teamStyle(t) },
+        Widgets.dot(t), t + (Session.instance().isMine(t) ? " (you)" : ""))));
   }
 
   summary() {
@@ -97,15 +99,17 @@ export class TeamPage extends Page {
   }
 
   render() {
+    // Everything below the picker uses this team's theme color (see .team-theme in style.css).
     return [
       this.picker(),
-      Page.head(Widgets.team(this.name, { link: false }),
-        "Current roster with season per-game averages. FG%, FT% and TO colored best (green) to worst (red) on this team."),
-      this.summary(),
-      this.rankChips(),
-      this.rosterTable(),
-      el("h3", { class: "section-title" }, "Matchups"),
-      this.historyTable(),
+      el("div", { class: "team-theme", style: Widgets.teamStyle(this.name) },
+        Page.head(Widgets.team(this.name, { link: false }),
+          "Current roster with season per-game averages. FG%, FT% and TO colored best (green) to worst (red) on this team."),
+        this.summary(),
+        this.rankChips(),
+        this.rosterTable(),
+        el("h3", { class: "section-title" }, "Matchups"),
+        this.historyTable()),
     ];
   }
 }

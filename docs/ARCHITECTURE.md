@@ -123,7 +123,9 @@ nbafantasy/
     └── site_publish_result.py    SitePublishResult
 web/
 ├── index.html, style.css         the page and its styles
+├── themes.json                   the team color themes
 └── js/                           ES modules, one class each (see "Website" below); main.js starts the app
+worker/                           Cloudflare Worker: login and team themes (src/, test/, wrangler.toml)
 tests/                            one test file per class (test_league_stats.py, ...); sample_league.py
                                   holds SampleLeague, a made-up league for tests
 scripts/                          install.sh (venv + login + launchd), uninstall.sh
@@ -145,16 +147,43 @@ deliberately *not* singletons, so tests can build them with different values.
 | File | Class | Role |
 |---|---|---|
 | `util/dom.js`, `util/format.js`, `util/rank-color.js` | `Dom`, `Format`, `RankColor` | Stateless helpers (static methods): building elements, number formats, rank colors |
-| `state/preferences.js` | `Preferences` (singleton) | The viewer's Stats/Ranks choice, kept in `localStorage` |
-| `state/league.js` | `League` (singleton) | Loads `league.json` and answers lookups (team colors, standings, a team's history) |
-| `components/widgets.js` | `Widgets` | Shared pieces: team name with color dot, result badges, the Stats/Ranks switch |
+| `shared/theme-assignment.js` | `ThemeAssignment` | Which theme each team has; also used by the Worker, so both agree |
+| `state/preferences.js` | `Preferences` (singleton) | The viewer's switch choices, kept in `localStorage` |
+| `state/league.js` | `League` (singleton) | Loads `league.json` and answers lookups (standings, a team's history) |
+| `state/api-client.js` | `ApiClient` (singleton) | Calls the Worker; its address is the `nbafantasy-api` meta tag in `index.html` |
+| `state/session.js` | `Session` (singleton) | Who is logged in: the Worker's signed token (never the password), in `localStorage` with "Remember me", else `sessionStorage` |
+| `state/team-themes.js` | `TeamThemes` (singleton) | Each team's color theme, from the Worker or, without one, the defaults |
+| `components/widgets.js` | `Widgets` | Shared pieces: team name with color dot, result badges, the switches |
 | `components/sortable-table.js` | `SortableTable` | A table whose columns sort on click; remembers each table's sort |
+| `components/account-menu.js` | `AccountMenu` | The header's "Log in" button, or your team with "Team theme…" and "Log out" |
+| `components/login-dialog.js`, `components/theme-dialog.js` | `LoginDialog`, `ThemeDialog` | Log in (team + league password + Remember me); pick a free theme |
 | `pages/page.js` → `season-page.js`, `weekly-page.js`, `team-page.js` | `Page` → `SeasonPage`, `WeeklyPage`, `TeamPage` | One class per page; the base class builds the category columns |
 | `router.js` | `Router` | Maps `#/season`, `#/weekly/<n>`, `#/team/<name>` to a page |
 | `app.js` | `App` (singleton) | Loads the data, draws the header, starts the router |
 | `main.js` | (none) | Entry point: `App.instance().start()` |
 
 The JavaScript singletons are created with `X.instance()`; calling `new X()` a second time throws.
+
+**Team colors.** `web/themes.json` lists the themes (id, name, color). Every team has one, and no
+two teams share one: a team keeps the theme it picked, the others get a default by league order.
+Pages set `--team` on anything that belongs to a team (rows, matchup cards, the team page, picker
+chips, dots) and the CSS colors it from there. The logged-in team's rows are tinted with its color.
+
+**Login and themes (`worker/`).** A Cloudflare Worker, one class per file in `worker/src/`:
+
+| File | Class | Role |
+|---|---|---|
+| `index.js` | (none) | Worker entry point: every request goes to `ApiWorker` |
+| `api-worker.js` | `ApiWorker` | Routes `GET /themes`, `POST /login`, `GET /me`, `PUT /me/theme`; CORS for the site |
+| `login-service.js` | `LoginService` | Checks team + league password (compared via SHA-256 digests), issues a session token |
+| `session-token.js` | `SessionToken` | Signs and verifies tokens (HMAC-SHA256). The key includes the password, so changing it logs everyone out |
+| `rate-limiter.js` | `RateLimiter` | Five tries per connection per 15 minutes, counted in Workers KV |
+| `theme-registry.js` | `ThemeRegistry` | Theme picks in Workers KV; refuses a theme another team has (409) |
+| `league-teams.js` | `LeagueTeams` | The valid team names, read from the published `league.json` |
+| `http.js`, `http-error.js` | `Http`, `HttpError` | JSON responses, CORS headers, request bodies, errors |
+
+The league password and token key are Worker secrets, never in the repo. `worker/test/` runs with
+`node --test` against an in-memory KV.
 
 ## Data model
 
@@ -183,7 +212,8 @@ at most 31 characters, and unique.
 
 ## Website
 
-`league.json` (schema version 1) holds `teams` (name, color), `season` (record, category record,
+`league.json` (schema version 2) holds `teams` (names, in ESPN order; no "my team": the website
+gets that from whoever is logged in), `season` (record, category record,
 stats, league ranks, average rank, weeks played, and `per_week` averages with their own league
 ranks), `season_completed` (the same, from finished weeks only), `weeks` (each team's matchup row with stats, weekly ranks,
 average and overall rank) and `rosters` (players in lineup order with per-game averages and

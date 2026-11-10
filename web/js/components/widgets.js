@@ -1,5 +1,6 @@
-import { League } from "../state/league.js";
 import { Preferences } from "../state/preferences.js";
+import { Session } from "../state/session.js";
+import { TeamThemes } from "../state/team-themes.js";
 import { Dom } from "../util/dom.js";
 
 const el = Dom.el;
@@ -10,8 +11,11 @@ export class Widgets {
 
   static teamHref(name) { return "#/team/" + encodeURIComponent(name); }
 
+  /** CSS custom property with the team's theme color, for styles that use var(--team). */
+  static teamStyle(name) { return { "--team": TeamThemes.instance().colorOf(name) }; }
+
   static dot(name) {
-    return el("span", { class: "dot", style: { background: League.instance().teamColor(name) }, "aria-hidden": "true" });
+    return el("span", { class: "dot", style: Widgets.teamStyle(name), "aria-hidden": "true" });
   }
 
   static team(name, { link = true } = {}) {
@@ -59,5 +63,6 @@ export class Widgets {
         prefs.currentWeek, choice => { prefs.setCurrentWeek(choice); onChange(); }));
   }
 
-  static mineRow(r) { return League.instance().isMine(r.team) ? "mine" : null; }
+  static mineRow(r) { return Session.instance().isMine(r.team) ? "mine" : null; }
+  static teamRow(r) { return Widgets.teamStyle(r.team); }
 }

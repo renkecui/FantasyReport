@@ -1,5 +1,6 @@
 import { Widgets } from "../components/widgets.js";
 import { Page } from "./page.js";
+import { Session } from "../state/session.js";
 import { Dom } from "../util/dom.js";
 import { Format } from "../util/format.js";
 import { RankColor } from "../util/rank-color.js";
@@ -33,7 +34,7 @@ export class WeeklyPage extends Page {
   matchupCards() {
     const rows = this.week.rows;
     const seen = new Set();
-    const side = x => el("div", { class: "matchup-side" + (x.result === "W" ? " winner" : "") },
+    const side = x => el("div", { class: "matchup-side" + (x.result === "W" ? " winner" : ""), style: Widgets.teamStyle(x.team) },
       Widgets.team(x.team), el("span", { class: "score" }, Format.score(x), Widgets.result(x)));
     const cards = [];
     for (const r of rows) {
@@ -41,7 +42,8 @@ export class WeeklyPage extends Page {
       const o = rows.find(x => x.team === r.opponent && x.opponent === r.team);
       seen.add(r.team);
       if (o) seen.add(o.team);
-      const mine = this.league.isMine(r.team) || (o && this.league.isMine(o.team));
+      const session = Session.instance();
+      const mine = session.isMine(r.team) || (o && session.isMine(o.team));
       cards.push(el("div", { class: "matchup" + (mine ? " mine" : "") }, side(r), o ? side(o) : null));
     }
     return el("div", { class: "matchups" }, cards);
@@ -70,7 +72,7 @@ export class WeeklyPage extends Page {
     if (!this.week) return [el("p", { class: "state" }, "No matchups yet.")];
     const wk = this.week;
     const { toggle, table } = this.switchableTable(() => this.columns(), {
-      id: "weekly", rows: wk.rows, defaultSort: { key: "overall", dir: "asc" }, rowClass: Widgets.mineRow,
+      id: "weekly", rows: wk.rows, defaultSort: { key: "overall", dir: "asc" }, rowClass: Widgets.mineRow, rowStyle: Widgets.teamRow,
     });
     const status = el("span", { class: "badge " + (wk.final ? "T" : "Live") }, wk.final ? "Final" : "Live");
     return [

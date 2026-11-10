@@ -1,0 +1,16 @@
+# Cloudflare Worker for the league website: login and team themes. Setup: docs/SETUP.md step 8.
+name = "nbafantasy-api"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+
+[vars]
+LEAGUE_JSON_URL = "https://renkecui.github.io/NBAFantasy26/league.json"
+ALLOWED_ORIGINS = "https://renkecui.github.io"
+# "Remember me" logins last until this date (end of the season).
+SESSION_END = "2027-07-01"
+
+# Holds team theme picks and login rate limits.
+# Create it with:  npx wrangler kv namespace create KV   then paste the id here.
+[[kv_namespaces]]
+binding = "KV"
+id = "3e2c7e9362e54dbb829b59b71031367d"

@@ -17,9 +17,10 @@ class LeagueJsonTest(unittest.TestCase):
     def test_top_level_fields(self):
         self.assertEqual(self.p["schema_version"], LeagueJson.SCHEMA_VERSION)
         self.assertEqual(self.p["generated_at"], "2026-11-09T13:00:00+00:00")
-        self.assertEqual(self.p["my_team"], self.data.my_team)
+        self.assertNotIn("my_team", self.p)  # the website gets "my team" from the login
         self.assertEqual(self.p["categories"], list(Categories.ALL))
-        self.assertEqual(self.p["teams"][0]["name"], self.data.my_team)
+        self.assertEqual([t["name"] for t in self.p["teams"]], self.data.teams)  # ESPN order
+        self.assertEqual([r["team"] for r in self.p["season"]], self.data.teams)
         self.assertEqual(self.p["lower_is_better"], ["TO"])
 
     def test_weeks_rosters_and_season(self):
@@ -36,7 +37,7 @@ class LeagueJsonTest(unittest.TestCase):
         self.assertEqual(sum(r["stats"]["PTS"] for r in self.p["season"])
                          - sum(r["stats"]["PTS"] for r in self.p["season_completed"]), live_pts)
         self.assertEqual(set(self.p["rosters"]), set(self.data.teams))
-        player = self.p["rosters"][self.data.my_team][0]
+        player = self.p["rosters"][self.data.teams[0]][0]
         self.assertEqual(player["slot"], "PG")
         self.assertIn("FG%", player["stats"])
 

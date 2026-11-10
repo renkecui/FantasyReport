@@ -2,7 +2,7 @@ export class League {
   static #instance = null;
   // Where the league data comes from. One place, so it can point elsewhere later (WEBSITE_PLAN Phase 6).
   static DATA_URL = "league.json";
-  static SCHEMA_VERSION = 1;
+  static SCHEMA_VERSION = 2;
 
   static instance() { return (League.#instance ??= new League()); }
 
@@ -22,16 +22,11 @@ export class League {
   }
 
   get title() { return this.data.title; }
-  get myTeam() { return this.data.my_team; }
   get teamNames() { return this.data.teams.map(t => t.name); }
   get categories() { return this.data.categories; }
   get season() { return this.data.season; }
   get weeks() { return this.data.weeks; }
 
-  teamColor(name) {
-    const t = this.data.teams.find(x => x.name === name);
-    return t ? t.color : "#cccccc";
-  }
   /** The week in progress, or undefined when every week is final. */
   get liveWeek() { return this.weeks.find(w => !w.final); }
   get finishedWeekCount() { return this.weeks.filter(w => w.final).length; }
@@ -43,7 +38,6 @@ export class League {
 
   roster(name) { return this.data.rosters[name] || []; }
   seasonRow(name) { return this.data.season.find(r => r.team === name); }
-  isMine(name) { return name === this.data.my_team; }
 
   /** Standings order: matchup wins (ties count half), then category win margin. */
   static standing(r) { return (r.wins + 0.5 * r.ties) * 10000 + (r.cat_wins - r.cat_losses); }

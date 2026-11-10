@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `npm run dev` (git-ignored). Real values are set with `npx wrangler secret put`.
+LEAGUE_PASSWORD=change-me
+TOKEN_SECRET=any-long-random-text
+# Local testing against the site preview (python3 -m http.server 8765 -d data/site)
+LEAGUE_JSON_URL=http://localhost:8765/league.json
+ALLOWED_ORIGINS=http://localhost:8765

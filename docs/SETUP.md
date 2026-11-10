@@ -53,7 +53,7 @@ A private league needs two cookies from your ESPN login.
    |---|---|
    | `league_id` | The number after `leagueId=` in your league's URL |
    | `season_year` | The season ESPN uses, e.g. `2027` for the 2026-27 season |
-   | `my_team_name` | Your team's name exactly as ESPN shows it (its tab goes first) |
+   | `my_team_name` | Your team's name exactly as ESPN shows it (its tab goes first in the Google Sheet; the website highlights whoever is logged in) |
    | `sheet_title` | Name for the Google Sheet (also the website's title) |
    | `espn_s2`, `swid` | The two cookie values |
    | `publish_site` | `true` to publish the website every run (step 7); leave `false` until then |
@@ -129,6 +129,48 @@ committed). The run makes that commit in its own checkout of `main` in `data/sit
 touches the branch or files you're working on; deleting that folder is safe. Run `git pull` on `main`
 before starting new work to pick up the data commits. Any push that changes `web/` (including merging
 a working branch into `main`) redeploys the site.
+
+## 8. (Optional) Turn on login and team themes (Cloudflare Worker)
+
+Every team already has its own color on the website. To let people **log in** (their team +
+the league password) and **pick their team's color theme**, run the small API in `worker/` on
+Cloudflare's free plan. Without it, login is hidden and every team keeps its default theme.
+
+1. Create a free account at https://dash.cloudflare.com/sign-up (no credit card needed).
+2. In Terminal, from the project folder:
+   ```bash
+   cd worker
+   npm install
+   npx wrangler login
+   npx wrangler kv namespace create KV
+   ```
+   `wrangler login` opens your browser to allow access. The last command prints an `id`;
+   paste it into `worker/wrangler.toml` in place of `REPLACE_WITH_KV_NAMESPACE_ID`.
+3. Set the two secrets. Each command asks you to type the value (it is never saved in the repo):
+   ```bash
+   npx wrangler secret put LEAGUE_PASSWORD
+   npx wrangler secret put TOKEN_SECRET
+   ```
+   `LEAGUE_PASSWORD` is what you give the league. For `TOKEN_SECRET`, use a long random value,
+   e.g. the output of `openssl rand -hex 32`.
+4. Put it online:
+   ```bash
+   npx wrangler deploy
+   ```
+   It prints the Worker's address, like `https://nbafantasy-api.<your-name>.workers.dev`.
+5. Put that address in `web/index.html`:
+   `<meta name="nbafantasy-api" content="https://nbafantasy-api.<your-name>.workers.dev">`,
+   then commit and push to `main`. The site redeploys and shows **Log in** in the header.
+
+Good to know:
+- **Changing the password**: run `npx wrangler secret put LEAGUE_PASSWORD` again. Everyone is logged out.
+- **"Remember me"** keeps people logged in until `SESSION_END` in `worker/wrangler.toml` (the end of
+  the season); without it, a login lasts 12 hours or until the browser closes.
+- Five wrong passwords from one connection lock login for 15 minutes.
+- The site's address is in `ALLOWED_ORIGINS` in `worker/wrangler.toml`; only that site can use the API.
+- Test locally: copy `worker/.dev.vars.example` to `worker/.dev.vars`, run `npm run dev` in `worker/`,
+  and set the meta tag in `data/site/index.html` (not `web/`) to `http://127.0.0.1:8787` while previewing.
+- Worker tests: `cd worker && npm test`.
 
 ---
 

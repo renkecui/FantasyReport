@@ -72,7 +72,8 @@ export class SeasonPage extends Page {
       () => this.columns(),
       () => {
         subtitle.textContent = this.subtitle();
-        return { id: "season", rows: this.rows(), defaultSort: { key: "record", dir: "desc" }, rowClass: Widgets.mineRow };
+        return { id: "season", rows: this.rows(), defaultSort: { key: "record", dir: "desc" }, rowClass: Widgets.mineRow,
+          rowStyle: Widgets.teamRow };
       },
       redraw => [
         Widgets.seasonStatsToggle(redraw),

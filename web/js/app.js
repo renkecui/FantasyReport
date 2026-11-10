@@ -1,16 +1,24 @@
 /*
  * The league website. One class per file (web/js/):
  *   Dom, Format, RankColor        stateless helpers (static methods)
+ *   ThemeAssignment               which theme each team has (shared with the Worker)
  *   Preferences (singleton)       per-viewer settings kept in localStorage
  *   League (singleton)            the loaded league.json and lookups on it
- *   Widgets                       small shared pieces: team names, result badges, the Stats/Ranks switch
+ *   ApiClient (singleton)         calls the Cloudflare Worker (login, themes)
+ *   Session (singleton)           who is logged in (a session token, never the password)
+ *   TeamThemes (singleton)        each team's color theme
+ *   Widgets                       small shared pieces: team names, result badges, switches
  *   SortableTable                 a table whose columns sort on click
+ *   AccountMenu, LoginDialog, ThemeDialog   the header's login area and its dialogs
  *   Page → SeasonPage, WeeklyPage, TeamPage
  *   Router                        #/season, #/weekly/<n>, #/team/<name> → a page
- *   App (singleton)               loads the data, draws the header, starts the router
+ *   App (singleton)               loads everything, draws the header, starts the router
  */
+import { AccountMenu } from "./components/account-menu.js";
 import { Router } from "./router.js";
 import { League } from "./state/league.js";
+import { Session } from "./state/session.js";
+import { TeamThemes } from "./state/team-themes.js";
 import { Dom } from "./util/dom.js";
 import { Format } from "./util/format.js";
 
@@ -25,11 +33,13 @@ export class App {
     if (App.#instance) throw new Error("App is a singleton; use App.instance()");
     this.main = document.getElementById("main");
     this.router = new Router(this.main, document.querySelector(".tabs"));
+    this.account = new AccountMenu(document.getElementById("account"), () => this.refresh());
   }
 
   async start() {
     try {
       await League.instance().load();
+      await TeamThemes.instance().load();
     } catch (e) {
       this.main.replaceChildren(el("p", { class: "state error" },
         `Couldn't load the league data (${e.message}). Try reloading the page.`));
@@ -37,7 +47,17 @@ export class App {
       return;
     }
     this.renderHeader();
+    this.account.render();
     this.router.start();
+    // A saved login may have been revoked (e.g. the league password changed).
+    const session = Session.instance();
+    if (session.loggedIn) session.check().then(() => { if (!session.loggedIn) this.refresh(); });
+  }
+
+  /** Redraw after logging in or out, or a theme change. */
+  refresh() {
+    this.account.render();
+    this.router.show();
   }
 
   renderHeader() {

@@ -20,3 +20,9 @@ __pycache__/
 *.pyc
 .DS_Store
 .venv/
+
+# ---- Cloudflare Worker (worker/) ----
+worker/node_modules/
+.wrangler/
+.wrangler/
+worker/.dev.vars

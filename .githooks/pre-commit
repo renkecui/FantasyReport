@@ -1,6 +1,6 @@
 #!/bin/bash
 # Blocks a commit if private files or secrets are about to be committed.
-blocked='(^|/)(config\.json|credentials\.json|token\.json|sheet_id\.txt|sync_state\.json|update\.log)$|\.xlsx$|^(data|backups)/'
+blocked='(^|/)(config\.json|credentials\.json|token\.json|sheet_id\.txt|sync_state\.json|update\.log|\.dev\.vars)$|\.xlsx$|^(data|backups)/'
 bad=$(git diff --cached --name-only | grep -E "$blocked")
 if [ -n "$bad" ]; then
   echo "Commit blocked: these files are private and must not be committed:"; echo "$bad"

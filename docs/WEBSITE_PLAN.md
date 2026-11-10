@@ -156,7 +156,8 @@ Limits to accept:
 
 ### League password
 
-See [TODO](TODO.md#league-password). Stats pages stay public; only the chat is protected.
+*Built:* login, session tokens and team themes are in `worker/` (see ARCHITECTURE and SETUP step 8);
+the chat endpoint will reuse the same session check. See [TODO](TODO.md#league-password). Stats pages stay public; only the chat is protected.
 
 - The page asks for the password once; the Worker checks it and returns a signed token
   (HMAC, expires after e.g. 30 days) that the page stores and sends with each chat request.

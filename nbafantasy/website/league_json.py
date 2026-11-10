@@ -6,13 +6,14 @@ from ..models.league_data import LeagueData
 from ..stats.league_stats import LeagueStats
 from ..stats.season_row import SeasonRow
 from ..stats.weekly_row import WeeklyRow
-from ..workbook.theme import Theme
 
 
 class LeagueJson:
     """The contents of league.json, built from an explicit allow-list of fields."""
 
-    SCHEMA_VERSION = 1
+    # 2: no "my_team" (the website gets it from whoever is logged in), no team colors (themes
+    #    are on the website), teams in ESPN order.
+    SCHEMA_VERSION = 2
 
     def __init__(self, data: LeagueData, title: str, season_year: int, now=None):
         self.data = data
@@ -23,21 +24,19 @@ class LeagueJson:
 
     def payload(self):
         data = self.data
-        teams = data.teams_mine_first()
+        teams = list(data.teams)  # ESPN order: no team is singled out on the public site
         weeks = self.stats.weeks()
         return {
             "schema_version": self.SCHEMA_VERSION,
             "generated_at": self.now.astimezone(timezone.utc).isoformat(timespec="seconds"),
             "title": self.title,
             "season_year": self.season_year,
-            "my_team": data.my_team if data.my_team in teams else "",
             "categories": list(Categories.ALL),
             "lower_is_better": sorted(Categories.LOWER_IS_BETTER),
             "player_stats": list(Categories.PLAYER_STATS),
-            "teams": [{"name": t, "color": "#" + Theme.PALETTE[i % len(Theme.PALETTE)]}
-                      for i, t in enumerate(teams)],  # same colors as the workbook
-            "season": [self._season_row(r) for r in self.stats.season],
-            "season_completed": [self._season_row(r) for r in self.stats.season_completed],
+            "teams": [{"name": t} for t in teams],  # colors come from the website's themes
+            "season": self._in_order(self.stats.season, teams),
+            "season_completed": self._in_order(self.stats.season_completed, teams),
             "weeks": [{"number": wk.number, "final": wk.final,
                        "rows": [self._weekly_row(w) for w in weeks.get(wk.number, [])]}
                       for wk in data.weeks],
@@ -74,6 +73,11 @@ class LeagueJson:
                 "tiebreak": r.decided_by_tiebreak, "avg_rank": cls.compact(w.avg_rank, 2),
                 "overall_rank": w.overall_rank,
                 "stats": {c: cls.compact(r.stats[c]) for c in Categories.ALL}, "ranks": w.ranks}
+
+    @classmethod
+    def _in_order(cls, rows, teams):
+        by_team = {r.team: r for r in rows}
+        return [cls._season_row(by_team[t]) for t in teams if t in by_team]
 
     def _roster(self, team):
         roster = self.data.rosters.get(team)

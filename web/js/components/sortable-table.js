@@ -6,7 +6,8 @@ const el = Dom.el;
 /**
  * columns: [{ key, label, title, group, cls, value(row), cell(row), cellTitle(row),
  *             tint(row) -> 0..1 | null, dir: "asc" | "desc" (first-click direction), sortable }]
- * options: { id, rows, defaultSort: { key, dir } | null, rowClass(row, originalIndex, isSorted) }
+ * options: { id, rows, defaultSort: { key, dir } | null, rowClass(row, originalIndex, isSorted),
+ *            rowStyle(row) -> { cssProperty: value } }
  * Each table id remembers its sort while the page is open.
  */
 export class SortableTable {
@@ -88,6 +89,7 @@ export class SortableTable {
 
     const body = el("tbody", {}, this.#sortedRows().map(([r, i]) => el("tr", {
       class: this.options.rowClass ? this.options.rowClass(r, i, !!s) : null,
+      style: this.options.rowStyle ? this.options.rowStyle(r) : null,
     }, this.columns.map((c, ci) => {
       const t = c.tint ? c.tint(r) : null;
       return el("td", {
