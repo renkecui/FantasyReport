@@ -100,7 +100,7 @@ instead of `config.json`.
    |---|---|---|
    | `LEAGUE_ID` | **Yes** | `league_id` |
    | `ESPN_S2` | **Yes** (private league) | `espn_s2` |
-   | `ESPN_SWID` | **Yes** (private league) | `swid` (with the braces) |
+   | `ESPN_SWID` (or `SWID`) | **Yes** (private league) | `swid` (with the braces) |
    | `GOOGLE_TOKEN_JSON` | For the Google Sheet | the whole contents of `data/token.json` (`pbcopy < data/token.json` copies it on a Mac) |
    | `GOOGLE_SHEET_ID` | For the Google Sheet | the contents of `data/sheet_id.txt` |
    | `MY_TEAM_NAME` | No | puts that team's tab first in the sheet |
