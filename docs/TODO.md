@@ -1,6 +1,6 @@
 # TODO
 
-Open ideas. Done so far: the website, team color themes, login (team name + league password), and updates twice a day (7 AM and 3 PM).
+Open ideas. Done so far: the website, team color themes, login (team name + league password), the Charts tab (standings and weekly stat trends in team colors), and updates twice a day (7 AM and 3 PM).
 
 ## General Manager
 
@@ -33,7 +33,3 @@ the Weekly page and updated on every run.
   how often each team wins the most categories).
 - Needs the same extra ESPN data as the General Manager: each team's schedule of games this week.
 - Before the week starts it's based on averages only; on the last day it's close to 0% or 100%.
-
-## Charts
-
-Charts of each team's rank trends through the season, colored with each team's theme (`TeamThemes`).
