@@ -2,6 +2,9 @@
 name = "nbafantasy-api"
 main = "src/index.js"
 compatibility_date = "2025-10-01"
+# Serve the API at https://nbafantasy-api.<subdomain>.workers.dev (no per-version preview URLs).
+workers_dev = true
+preview_urls = false
 
 [vars]
 LEAGUE_JSON_URL = "https://renkecui.github.io/NBAFantasy26/league.json"

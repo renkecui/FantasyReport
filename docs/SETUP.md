@@ -158,6 +158,8 @@ Cloudflare's free plan. Without it, login is hidden and every team keeps its def
    npx wrangler deploy
    ```
    It prints the Worker's address, like `https://nbafantasy-api.<your-name>.workers.dev`.
+   The first time, Cloudflare asks you to register a `workers.dev` subdomain for your account
+   (Workers & Pages in the dashboard); deploy again afterwards.
 5. Put that address in `web/index.html`:
    `<meta name="nbafantasy-api" content="https://nbafantasy-api.<your-name>.workers.dev">`,
    then commit and push to `main`. The site redeploys and shows **Log in** in the header.
