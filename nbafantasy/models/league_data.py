@@ -12,6 +12,7 @@ class LeagueData:
     weeks: List[Week]
     rosters: Dict[str, TeamRoster]        # every team's current roster, by team name
     my_team: str = ""
+    season_year: int = 0                  # e.g. 2027 for the 2026-27 season
 
     def teams_mine_first(self):
         """Team names with my_team (config.json my_team_name) first, for the Google Sheet."""

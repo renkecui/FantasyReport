@@ -9,8 +9,8 @@ class RunOptionsTest(unittest.TestCase):
         return RunOptions.from_args(list(args))
 
     def test_publish_site(self):
-        on = Config(league_id=1, season_year=2027, publish_site=True)
-        off = Config(league_id=1, season_year=2027)
+        on = Config(league_id=1, publish_site=True)
+        off = Config(league_id=1)
         self.assertTrue(self.opts().publish_site(on))
         self.assertFalse(self.opts().publish_site(off))
         self.assertTrue(self.opts("--site-only").publish_site(off))

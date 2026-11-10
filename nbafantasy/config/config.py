@@ -10,7 +10,7 @@ from ..common.sync_error import SyncError
 class Config:
     """The league settings: config.json on the Mac, or environment variables (GitHub Actions)."""
     league_id: int
-    season_year: int
+    season_year: Optional[int] = None  # None: the season ESPN says is current
     my_team_name: str = ""
     sheet_title: str = "The Boys Fantasy Report"
     espn_s2: str = ""
@@ -38,9 +38,8 @@ class Config:
 
     @classmethod
     def from_env(cls, env: Mapping[str, str]):
-        missing = [cls.ENV[k] for k in ("league_id", "season_year") if not env.get(cls.ENV[k])]
-        if missing:
-            raise SyncError(f"config.json not found and {', '.join(missing)} not set. "
+        if not env.get(cls.ENV["league_id"]):
+            raise SyncError("config.json not found and LEAGUE_ID not set. "
                             f"Copy config.example.json to config.json (or set the environment variables).")
         raw = {key: env.get(var, "") for key, var in cls.ENV.items()}
         raw["publish_site"] = raw["publish_site"].strip().lower() in ("1", "true", "yes")
@@ -50,7 +49,7 @@ class Config:
     def from_dict(cls, raw):
         return cls(
             league_id=int(raw["league_id"]),
-            season_year=int(raw["season_year"]),
+            season_year=int(raw["season_year"]) if raw.get("season_year") else None,
             my_team_name=(raw.get("my_team_name") or "").strip(),
             sheet_title=raw.get("sheet_title") or cls.sheet_title,
             espn_s2=(raw.get("espn_s2") or "").strip(),

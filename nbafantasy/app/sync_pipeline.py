@@ -66,7 +66,7 @@ class SyncPipeline:
         os.replace(tmp, local)  # local copy, always kept up to date
 
     def build_site(self, config: Config, data: LeagueData):
-        league = LeagueJson(data, config.sheet_title, config.season_year)
+        league = LeagueJson(data, config.sheet_title, data.season_year)
         return SiteBuilder(self.paths.web, self.paths.site).build(league)
 
     def publish_sheet(self, config: Config):

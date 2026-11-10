@@ -54,9 +54,8 @@ A private league needs two cookies from your ESPN login.
    | Key | What to put |
    |---|---|
    | `league_id` | The number after `leagueId=` in your league's URL |
-   | `season_year` | The season ESPN uses, e.g. `2027` for the 2026-27 season |
-   | `my_team_name` | Your team's name exactly as ESPN shows it (its tab goes first in the Google Sheet; the website highlights whoever is logged in) |
-   | `sheet_title` | Name for the Google Sheet (also the website's title) |
+   | `my_team_name` | Optional. Your team's name exactly as ESPN shows it (its tab goes first in the Google Sheet; the website highlights whoever is logged in) |
+   | `sheet_title` | Optional. Name for the Google Sheet (also the website's title) |
    | `espn_s2`, `swid` | The two cookie values |
    | `publish_site` | `true` to publish the website on manual runs too; leave `false` until step 5 |
 
@@ -90,18 +89,18 @@ instead of `config.json`.
 2. **Secrets:** open **Settings → Secrets and variables → Actions** and add these
    **repository secrets** (the values are in `config.json` and `data/`):
 
-   | Secret | Value |
-   |---|---|
-   | `LEAGUE_ID` | `league_id` |
-   | `SEASON_YEAR` | `season_year` |
-   | `ESPN_S2` | `espn_s2` |
-   | `ESPN_SWID` | `swid` (with the braces) |
-   | `GOOGLE_TOKEN_JSON` | the whole contents of `data/token.json` (`pbcopy < data/token.json` copies it on a Mac) |
-   | `GOOGLE_SHEET_ID` | the contents of `data/sheet_id.txt` |
-   | `MY_TEAM_NAME`, `SHEET_TITLE` | optional, same as in `config.json` |
+   | Secret | Needed? | Value |
+   |---|---|---|
+   | `LEAGUE_ID` | **Yes** | `league_id` |
+   | `ESPN_S2` | **Yes** (private league) | `espn_s2` |
+   | `ESPN_SWID` | **Yes** (private league) | `swid` (with the braces) |
+   | `GOOGLE_TOKEN_JSON` | For the Google Sheet | the whole contents of `data/token.json` (`pbcopy < data/token.json` copies it on a Mac) |
+   | `GOOGLE_SHEET_ID` | For the Google Sheet | the contents of `data/sheet_id.txt` |
+   | `MY_TEAM_NAME` | No | puts that team's tab first in the sheet |
+   | `SHEET_TITLE` | No | the sheet's and site's title (default "The Boys Fantasy Report") |
 
-   Without `GOOGLE_TOKEN_JSON` the workflow updates only the website. Until `LEAGUE_ID` is set,
-   scheduled runs skip quietly.
+   The season isn't needed: each run asks ESPN which season is current. Without the two Google
+   secrets the workflow updates only the website. Until `LEAGUE_ID` is set, scheduled runs skip quietly.
 3. **Check it:** open the **Actions** tab, pick **Update league data**, and click **Run workflow**.
    It should finish green, and the log should end with `Updated Google Sheet: https://docs.google.com/...`.
    After a minute or two the site is at `https://<your-github-name>.github.io/FantasyReport/`.
@@ -192,11 +191,11 @@ Every failure is in the run's log, and a failed scheduled run emails you.
 
 | The log says | Fix |
 |---|---|
-| `config.json not found and LEAGUE_ID ... not set` | Add the secrets (step 5). |
+| `config.json not found and LEAGUE_ID not set` | Add the secrets (step 5). |
 | `GOOGLE_SHEET_ID secret is missing` | Add it from `data/sheet_id.txt` (step 5). |
 | `Google login missing or expired` | Run `python3 fantasy_update.py --login` on your computer, then copy the new `data/token.json` into `GOOGLE_TOKEN_JSON`. |
 | `ESPN refused the request` / `ESPNAccessDenied` | The ESPN cookies expired. Get fresh ones (step 3) and update `ESPN_S2` / `ESPN_SWID`. |
-| `No matchups found` | Check `LEAGUE_ID` and `SEASON_YEAR`. |
+| `No matchups found` | Check `LEAGUE_ID` (the league may not have started its season yet). |
 | `team '…' not found` | Fix `MY_TEAM_NAME`; the log lists ESPN's team names. |
 | `ESPN data looks wrong` | Usually ESPN is mid-update. The next run normally works. |
 | `can no longer edit the Google Sheet` | Sharing changed. Make sure your account still owns or can edit it. |

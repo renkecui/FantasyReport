@@ -25,7 +25,7 @@ class LeagueValidator:
 
     def _weeks(self, data):
         if not data.weeks:
-            raise SyncError("No matchups found. Check league_id and season_year in config.json.")
+            raise SyncError("No matchups found. Check league_id (and season_year, if set) in config.json or the secrets.")
         problems = []
         n = len(data.teams)
         # Each matchup gives 2 rows. With an odd number of teams one team has a bye each week.

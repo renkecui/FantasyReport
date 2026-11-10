@@ -86,9 +86,9 @@ jobs:
         if: steps.when.outputs.go == 'true'
         env:
           LEAGUE_ID: ${{ secrets.LEAGUE_ID }}
-          SEASON_YEAR: ${{ secrets.SEASON_YEAR }}
           ESPN_S2: ${{ secrets.ESPN_S2 }}
           ESPN_SWID: ${{ secrets.ESPN_SWID }}
+          # Optional: which team's tab goes first in the sheet, and the sheet's / site's title.
           MY_TEAM_NAME: ${{ secrets.MY_TEAM_NAME }}
           SHEET_TITLE: ${{ secrets.SHEET_TITLE }}
           PUBLISH_SITE: "true"
