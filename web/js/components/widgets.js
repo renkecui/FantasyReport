@@ -73,7 +73,7 @@ export class Widgets {
       new Dropdown({
         label: "Week", selected: index, onPick,
         // Only the most recent week can be live.
-        items: weeks.map((w, i) => ({ value: i, label: `Week ${w.number}${!w.final && i === weeks.length - 1 ? " · Live" : ""}` })),
+        items: weeks.map((w, i) => ({ value: i, label: `Week ${w.number}`, live: !w.final && i === weeks.length - 1 })),
       }).render(),
       el("button", { class: "week-arrow next", type: "button", "aria-label": "Next week", disabled: index === weeks.length - 1,
         onclick: () => onPick(index + 1) }));

@@ -22,6 +22,7 @@
   --tie-bg: #e2e8f0;
   --live: #1d4ed8;
   --live-bg: #dbeafe;
+  --live-red: #d0021b;
   --tint-sat: 70%;
   --tint-light: 52%;
   --tint-alpha: 0.24;
@@ -50,6 +51,7 @@
     --tie-bg: #283140;
     --live: #93c5fd;
     --live-bg: #172a4a;
+    --live-red: #ff5c5c;
     --tint-light: 45%;
     --tint-alpha: 0.32;
     --shadow: none;
@@ -60,7 +62,7 @@
   --bg: #0f1115; --surface: #171a21; --surface-2: #1e222b; --text: #e8eaee; --muted: #9aa3b2;
   --border: #2a2f3a; --accent: #fb923c; --accent-soft: #2b1a10; --navy: #9db4e0; --mine: #2a2512;
   --mine-border: #b38b00; --win: #4ade80; --win-bg: #12301d; --loss: #f87171; --loss-bg: #3a1515;
-  --tie: #cbd5e1; --tie-bg: #283140; --live: #93c5fd; --live-bg: #172a4a; --tint-light: 45%;
+  --tie: #cbd5e1; --tie-bg: #283140; --live: #93c5fd; --live-bg: #172a4a; --live-red: #ff5c5c; --tint-light: 45%;
   --tint-alpha: 0.32; --shadow: none;
 }
 
@@ -312,7 +314,6 @@ body.locked .tabs, body.locked .site-footer { display: none; }
   padding: 7px 8px; cursor: pointer; white-space: nowrap;
 }
 /* No box, like the week arrows: the text and its bold caret turn orange on hover. */
-.dropdown-button:hover { color: var(--accent); }
 .dropdown-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .dropdown-caret {
   width: 8px; height: 8px; margin-top: -4px;
@@ -334,6 +335,8 @@ body.locked .tabs, body.locked .site-footer { display: none; }
 }
 .dropdown-item.active { background: var(--surface-2); }
 .dropdown-item[aria-selected="true"] { border-left-color: var(--accent); }
+/* The week in progress: red, like a live game. */
+.dropdown-live { color: var(--live-red); margin-left: 0.3em; }
 
 /* Previous / next week: bold chevrons with no box around them, right next to the drop-down. */
 .controls.week-picker { gap: 0; }
@@ -348,7 +351,6 @@ body.locked .tabs, body.locked .site-footer { display: none; }
 }
 .week-arrow.prev::before { transform: translateX(2px) rotate(45deg); }
 .week-arrow.next::before { transform: translateX(-2px) rotate(-135deg); }
-.week-arrow:hover:not(:disabled) { color: var(--accent); }
 .week-arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .week-arrow:disabled { opacity: 0.25; cursor: default; }
 .btn:disabled { opacity: 0.4; cursor: default; }
@@ -432,11 +434,11 @@ td.nba-team, td.slot { font-size: 12px; }
 :root[data-theme="dark"] { --team-ink: #fff; }
 [style*="--team"] { --team-text: color-mix(in oklab, var(--team) 65%, var(--team-ink)); }
 .team-link { text-decoration: none; }
-.team-link:hover, .team-link:focus-visible { text-decoration: underline; color: var(--team-text, inherit); }
+.team-link:hover, .team-link:focus-visible { color: var(--team-text, inherit); }
 /* In tables and matchup cards the whole cell is the link, not just the name. */
 td .team-link::after, .matchup-side .team-link::after { content: ""; position: absolute; inset: 0; }
 td.name:not(:first-child):has(.team-link), .matchup-side { position: relative; }
-td:has(.team-link):hover .team-link, .matchup-side:hover .team-link { text-decoration: underline; }
+td:has(.team-link):hover .team-link, .matchup-side:hover .team-link { color: var(--team-text, inherit); }
 
 .badge {
   display: inline-block;

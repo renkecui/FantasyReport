@@ -7,7 +7,8 @@ const el = Dom.el;
  * VISIBLE items, scrolling for the rest. Works with the mouse and the keyboard (arrows, Home/End,
  * Enter/Space to pick, Escape to close).
  *
- * new Dropdown({ label: "Week", items: [{ label, value }], selected: value, onPick: value => ... })
+ * new Dropdown({ label: "Week", items: [{ label, value, live }], selected: value, onPick: value => ... })
+ * An item with live: true gets a red "· Live" after its label.
  */
 export class Dropdown {
   static VISIBLE = 5;
@@ -22,16 +23,21 @@ export class Dropdown {
     this.active = Math.max(0, items.findIndex(i => i.value === selected));
   }
 
+  /** An item's text: its label, plus a red "· Live" for the week in progress. */
+  static #text(item) {
+    return [item?.label ?? "", item?.live ? el("span", { class: "dropdown-live" }, "· Live") : null];
+  }
+
   render() {
     const current = this.items.find(i => i.value === this.selected) ?? this.items[0];
     this.button = el("button", {
       type: "button", class: "dropdown-button", "aria-haspopup": "listbox", "aria-expanded": "false",
-      "aria-controls": `${this.id}-list`, "aria-label": `${this.label}: ${current?.label ?? ""}`,
+      "aria-controls": `${this.id}-list`, "aria-label": `${this.label}: ${current?.label ?? ""}${current?.live ? ", live" : ""}`,
       onclick: () => (this.isOpen ? this.close() : this.open()),
       onkeydown: e => {
         if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) { e.preventDefault(); this.open(); }
       },
-    }, el("span", { class: "dropdown-value" }, current?.label ?? ""), el("span", { class: "dropdown-caret", "aria-hidden": "true" }));
+    }, el("span", { class: "dropdown-value" }, Dropdown.#text(current)), el("span", { class: "dropdown-caret", "aria-hidden": "true" }));
 
     this.list = el("ul", {
       id: `${this.id}-list`, class: "dropdown-list", role: "listbox", tabindex: "-1", hidden: true,
@@ -43,7 +49,7 @@ export class Dropdown {
       "aria-selected": String(item.value === this.selected),
       onmousemove: () => this.#setActive(i, false),
       onclick: () => this.#pick(i),
-    }, item.label)));
+    }, Dropdown.#text(item))));
 
     this.root = el("div", { class: "dropdown" }, this.button, this.list);
     return this.root;
