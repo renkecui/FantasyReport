@@ -33,3 +33,13 @@ the Weekly page and updated on every run.
   how often each team wins the most categories).
 - Needs the same extra ESPN data as the General Manager: each team's schedule of games this week.
 - Before the week starts it's based on averages only; on the last day it's close to 0% or 100%.
+
+## Today's game
+
+On the Teams page, small gray text next to each player's name showing whether they play today and
+against whom, like ESPN's roster: the opponent on one line and the tip-off time under it
+(`ORL` / `10:00 PM`, `@POR` / `11:00 PM`), or `-` for no game.
+
+- Opponent with `@` for away games, and the tip-off time in New York time.
+- Needs the NBA schedule from ESPN (the same game schedule the General Manager and Win chance use).
+- Data is from the latest run (7 AM / 3 PM), so it shows the scheduled time, not live scores.
