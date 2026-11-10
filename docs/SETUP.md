@@ -165,7 +165,7 @@ Good to know:
 - Five wrong passwords from one connection lock login for 15 minutes.
 - The site's address is in `ALLOWED_ORIGINS` in `worker/wrangler.toml`; only that site can use the API.
 - Worker tests run in the workflow. To work on it on a computer: `cd worker && npm install && npm test`;
-  `npm run dev` runs it locally with values from `worker/.dev.vars` (copy `.dev.vars.example`).
+  `./scripts/preview.sh` runs it locally together with the site ([PREVIEW.md](PREVIEW.md)).
 
 ---
 
@@ -181,7 +181,7 @@ The scheduled runs need nothing from you. For a run by hand (needs step 4 on tha
 | Stop the scheduled updates | Actions tab → **Update league data** → **⋯ → Disable workflow** |
 | Update from this computer | `python3 fantasy_update.py` |
 | Local files only (`.xlsx` and `data/site/`), publish nothing | `python3 fantasy_update.py --excel` |
-| Preview the website | `python3 -m http.server -d data/site`, then open http://localhost:8000 |
+| Preview the website on this computer | `./scripts/preview.sh` ([PREVIEW.md](PREVIEW.md)) |
 
 Each update replaces the whole sheet. Don't keep notes in it. If someone does edit it, a copy
 is saved before it is replaced (in the run's Artifacts, or `data/backups/` for a local run).

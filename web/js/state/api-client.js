@@ -6,13 +6,17 @@
 export class ApiClient {
   static #instance = null;
   static META = "nbafantasy-api";
+  // A local preview (scripts/preview.sh) talks to the local Worker: the live one only answers the real site.
+  static LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+  static LOCAL_API = "http://localhost:8787";
 
   static instance() { return (ApiClient.#instance ??= new ApiClient()); }
 
   constructor() {
     if (ApiClient.#instance) throw new Error("ApiClient is a singleton; use ApiClient.instance()");
     const meta = document.querySelector(`meta[name="${ApiClient.META}"]`);
-    this.base = (meta?.content || "").trim().replace(/\/+$/, "");
+    const live = (meta?.content || "").trim().replace(/\/+$/, "");
+    this.base = live && ApiClient.LOCAL_HOSTS.has(location.hostname) ? ApiClient.LOCAL_API : live;
   }
 
   get enabled() { return Boolean(this.base); }

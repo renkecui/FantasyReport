@@ -37,6 +37,7 @@ scripts/setup.sh                     # packages + Google login; needs credential
 
 Then add the settings as GitHub repository secrets so the scheduled workflow can run.
 Full walkthrough (Google Cloud, ESPN cookies, GitHub secrets, Worker): **[docs/SETUP.md](docs/SETUP.md)**.
+Trying website changes on your Mac: **[docs/PREVIEW.md](docs/PREVIEW.md)**.
 
 ## Usage
 
@@ -46,7 +47,7 @@ python3 fantasy_update.py --excel      # local files only (.xlsx + data/site), p
 python3 fantasy_update.py --site-only  # build and publish only the website
 python3 fantasy_update.py --no-site    # skip the website this run
 python3 fantasy_update.py --login      # sign in to Google again
-python3 -m http.server -d data/site    # preview the website at http://localhost:8000
+./scripts/preview.sh                   # preview the website on this computer (docs/PREVIEW.md)
 python3 -m unittest discover -s tests -t .   # Python tests
 npm --prefix worker test               # Worker tests
 ```
