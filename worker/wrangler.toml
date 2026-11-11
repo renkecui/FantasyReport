@@ -27,3 +27,8 @@ id = "3e2c7e9362e54dbb829b59b71031367d"
 # New York is UTC-4 or UTC-5, so each time has two crons an hour apart; only the right one acts.
 [triggers]
 crons = ["5 11,12,19,20 * * *"]
+
+# Keep the Worker's logs (Workers Logs, free plan included), so a failed update start shows in the
+# dashboard's Logs tab.
+[observability]
+enabled = true
