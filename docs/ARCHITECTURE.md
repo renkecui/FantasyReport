@@ -125,7 +125,7 @@ web/
 ├── index.html, style.css         the page and its styles
 ├── themes.json                   the team color themes
 └── js/                           ES modules, one class each (see "Website" below); main.js starts the app
-worker/                           Cloudflare Worker: login and team themes (src/, test/, wrangler.toml)
+worker/                           Cloudflare Worker: login, team themes, on-time update starts (src/, test/, wrangler.toml)
 tests/                            one test file per class (test_league_stats.py, ...); sample_league.py
                                   holds SampleLeague, a made-up league for tests
 scripts/                          setup.sh (venv + Google login), remove-mac-schedule.sh (old launchd job)
@@ -178,7 +178,8 @@ chips, dots) and the CSS colors it from there. The logged-in team's rows are tin
 
 | File | Class | Role |
 |---|---|---|
-| `index.js` | (none) | Worker entry point: every request goes to `ApiWorker` |
+| `index.js` | (none) | Worker entry point: every request goes to `ApiWorker`, the crons to `UpdateTrigger` |
+| `update-trigger.js` | `UpdateTrigger` | At 7 AM and 3 PM New York time, starts the "Update league data" workflow on GitHub (`GITHUB_TOKEN` secret) |
 | `api-worker.js` | `ApiWorker` | Routes `GET /themes`, `POST /login`, `GET /me`, `PUT /me/theme`; CORS for the site |
 | `login-service.js` | `LoginService` | Checks team + league password (compared via SHA-256 digests), issues a session token |
 | `session-token.js` | `SessionToken` | Signs and verifies tokens (HMAC-SHA256). The key includes the password, so changing it logs everyone out |

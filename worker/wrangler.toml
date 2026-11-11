@@ -1,4 +1,5 @@
-# Cloudflare Worker for the league website: login and team themes. Setup: docs/SETUP.md step 6.
+# Cloudflare Worker for the league website: login, team themes, and starting the league update on
+# schedule. Setup: docs/SETUP.md step 6.
 name = "nbafantasy-api"
 main = "src/index.js"
 # Cloudflare account (not a secret). GitHub deploys with the CLOUDFLARE_API_TOKEN secret.
@@ -13,9 +14,16 @@ LEAGUE_JSON_URL = "https://renkecui.github.io/FantasyReport/league.json"
 ALLOWED_ORIGINS = "https://renkecui.github.io"
 # "Remember me" logins last until this date (end of the season).
 SESSION_END = "2027-07-01"
+# The repository whose "Update league data" workflow the crons below start (with the GITHUB_TOKEN secret).
+GITHUB_REPO = "renkecui/FantasyReport"
 
 # Holds team theme picks and login rate limits.
 # Create it with:  npx wrangler kv namespace create KV   then paste the id here.
 [[kv_namespaces]]
 binding = "KV"
 id = "3e2c7e9362e54dbb829b59b71031367d"
+
+# Start the league update at 7 AM and 3 PM New York time (src/update-trigger.js). Cron is in UTC and
+# New York is UTC-4 or UTC-5, so each time has two crons an hour apart; only the right one acts.
+[triggers]
+crons = ["5 11,12,19,20 * * *"]

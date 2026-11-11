@@ -120,8 +120,9 @@ instead of `config.json`.
 Good to know:
 - A failed run emails you (GitHub's default for scheduled workflows). Warnings, such as "the sheet was
   edited and backed up", show on the run's summary page.
-- GitHub often starts scheduled runs late (sometimes hours), so each update has five hourly tries and
-  the first one to start does the work. GitHub pauses scheduled workflows after 60 days without
+- GitHub often starts scheduled runs late (sometimes hours) or skips them, so each update has five
+  hourly tries and the first one to start does the work. With step 6's `GITHUB_TOKEN`, the Worker
+  starts it on time instead and the tries just stop. GitHub pauses scheduled workflows after 60 days without
   any commits (e.g. the off-season); turn it back on in the Actions tab.
 - Edits people made to the sheet are backed up before each update; download them from the run's
   **Artifacts** (kept 90 days).
@@ -155,6 +156,15 @@ tests and deploys `worker/` from GitHub.
    `<meta name="nbafantasy-api" content="https://nbafantasy-api.<your-name>.workers.dev">`,
    then commit and push to `main`. The site redeploys, and from then on visitors see a
    login screen (username = their team name, password = the league password) before any league data.
+8. **On-time updates:** GitHub often starts its scheduled runs hours late or skips them, so the Worker
+   starts the update itself at 7 AM and 3 PM New York time. On GitHub, open **Settings (your profile)
+   → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**:
+   - Repository access: **Only select repositories** → this repository.
+   - Permissions: **Actions → Read and write** (nothing else).
+   - Expiration: the end of the season or later.
+
+   Copy the token and add it in Cloudflare (**nbafantasy-api → Settings → Variables and Secrets**) as
+   a **Secret** named `GITHUB_TOKEN`. Without it, GitHub's own schedule still runs, just less reliably.
 
 Good to know:
 - Any push that changes `worker/` (or `web/themes.json`, `web/js/shared/`) redeploys the Worker. Deploys
@@ -164,6 +174,8 @@ Good to know:
 - **"Remember me"** keeps people logged in until `SESSION_END` in `worker/wrangler.toml` (the end of
   the season); without it, a login lasts 12 hours or until the browser closes.
 - Five wrong passwords from one connection lock login for 15 minutes.
+- **The token expires**: make a new one (step 8) and replace `GITHUB_TOKEN`. Until then the updates
+  fall back to GitHub's schedule. The Worker's **Logs** show each start or refusal.
 - The site's address is in `ALLOWED_ORIGINS` in `worker/wrangler.toml`; only that site can use the API.
 - Worker tests run in the workflow. To work on it on a computer: `cd worker && npm install && npm test`;
   `./scripts/preview.sh` runs it locally together with the site ([PREVIEW.md](PREVIEW.md)).

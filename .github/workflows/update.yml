@@ -9,6 +9,8 @@ on:
     # scheduled runs hours late, or skips them, when it's busy. So each update has five tries an
     # hour apart, off the top of the hour; the first step lets only the first one after 7 AM / 3 PM
     # New York time do the work, however late it starts. The others stop after a few seconds.
+    # The Worker (worker/src/update-trigger.js) also starts it on time with "Run workflow"; then
+    # these tries find that run and stop.
     - cron: "17 11,12,13,14,15 * * *"
     - cron: "17 19,20,21,22,23 * * *"
   workflow_dispatch:  # "Run workflow" button in the Actions tab (runs at any time)
