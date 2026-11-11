@@ -4,9 +4,14 @@ import { UpdateTrigger } from "../src/update-trigger.js";
 
 const ENV = { GITHUB_TOKEN: "t0ken", GITHUB_REPO: "me/FantasyReport" };
 
+// Like Cloudflare's fetch, it refuses to run as a method of another object ("Illegal invocation").
 function fakeFetch(status = 204) {
   const calls = [];
-  const fn = async (url, init) => { calls.push({ url, init }); return new Response(status === 204 ? null : "nope", { status }); };
+  const fn = async function (url, init) {
+    if (this !== undefined && this !== globalThis) throw new TypeError("Illegal invocation");
+    calls.push({ url, init });
+    return new Response(status === 204 ? null : "nope", { status });
+  };
   return { fn, calls };
 }
 

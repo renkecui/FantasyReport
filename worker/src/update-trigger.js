@@ -11,10 +11,12 @@ export class UpdateTrigger {
   static WORKFLOW = "update.yml";
   static ZONE = "America/New_York";
 
-  constructor(env, fetchFn = fetch) {
+  // The default calls the global fetch directly: on Cloudflare, calling it as a method of another
+  // object (this.fetch(...)) throws "Illegal invocation".
+  constructor(env, fetchFn = (url, init) => fetch(url, init)) {
     this.token = env.GITHUB_TOKEN || "";
     this.repo = env.GITHUB_REPO || "";
-    this.fetch = fetchFn;
+    this.fetchFn = fetchFn;
   }
 
   /** The hour (0-23) in New York at `date`. */
@@ -33,7 +35,8 @@ export class UpdateTrigger {
       return "no token";
     }
     const url = `https://api.github.com/repos/${this.repo}/actions/workflows/${UpdateTrigger.WORKFLOW}/dispatches`;
-    const res = await this.fetch(url, {
+    const fetchFn = this.fetchFn;
+    const res = await fetchFn(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.token}`,
