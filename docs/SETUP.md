@@ -120,7 +120,8 @@ instead of `config.json`.
 Good to know:
 - A failed run emails you (GitHub's default for scheduled workflows). Warnings, such as "the sheet was
   edited and backed up", show on the run's summary page.
-- Runs can start a few minutes late. GitHub pauses scheduled workflows after 60 days without
+- GitHub often starts scheduled runs late (sometimes hours), so each update has five hourly tries and
+  the first one to start does the work. GitHub pauses scheduled workflows after 60 days without
   any commits (e.g. the off-season); turn it back on in the Actions tab.
 - Edits people made to the sheet are backed up before each update; download them from the run's
   **Artifacts** (kept 90 days).
