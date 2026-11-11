@@ -43,3 +43,22 @@ against whom, like ESPN's roster: the opponent on one line and the tip-off time 
 - Opponent with `@` for away games, and the tip-off time in New York time.
 - Needs the NBA schedule from ESPN (the same game schedule the General Manager and Win chance use).
 - Data is from the latest run (7 AM / 3 PM), so it shows the scheduled time, not live scores.
+
+## Remove Google Sheets
+
+The website becomes the only place the league data is shown. Deprecate, then remove, the Google
+Sheet and everything that exists only to build or publish it.
+
+- **Deprecate first:** stop publishing to the Sheet in the scheduled run and say so in the README,
+  so the league knows to use the website. Leave the old Sheet as it is (don't delete it).
+- **Remove the code:** `nbafantasy/google_sheets/` (login, publisher, sheet checks, sync state) and
+  `nbafantasy/workbook/` (the `.xlsx` builder), and their calls in `fantasy_update.py` and
+  `nbafantasy/app/` (`sync_pipeline.py`, `run_options.py`: drop `--login` and `--excel`).
+- **Remove the setup:** the Google packages in `requirements.txt` (`google-api-python-client`,
+  `google-auth-oauthlib`, `openpyxl`), the Google login in `scripts/setup.sh`, the Google secrets in
+  `.github/workflows/update.yml` and on GitHub, `credentials.json`, and the Google steps in
+  `docs/SETUP.md`.
+- **Keep the safety checks** that also protect the website: validating ESPN data before publishing,
+  retries, and the failure email. Move anything shared out of the Google code first.
+- Update the README, `docs/ARCHITECTURE.md`, `.gitignore`, the pre-commit hook and the tests to
+  match.
